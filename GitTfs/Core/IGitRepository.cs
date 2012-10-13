@@ -23,5 +23,7 @@ namespace Sep.Git.Tfs.Core
         GitCommit GetCommit(string commitish);
         Dictionary<string, GitObject> GetObjects();
         string GetCommitMessage(string head, string parentCommitish);
-    }
+
+		  string AssertValidBranchName(string gitBranchName);
+	 }
 }

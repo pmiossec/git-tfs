@@ -394,5 +394,14 @@ namespace Sep.Git.Tfs.Core
         {
             return _repository.ObjectDatabase.CreateBlob(filename).Id.Sha;
         }
-    }
+
+
+		  public string AssertValidBranchName(string gitBranchName)
+		  {
+			  var newGitBranchName = CommandOneline("check-ref-format", "--branch", gitBranchName);
+			  if (string.IsNullOrWhiteSpace(newGitBranchName) || newGitBranchName.IndexOf("fatal:") == 0)
+			      throw new GitTfsException("The name specified for the new git branch is not allowed. Choose another one!");
+			  return newGitBranchName.Trim();
+        }
+	 }
 }
