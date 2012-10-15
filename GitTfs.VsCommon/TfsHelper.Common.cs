@@ -111,34 +111,45 @@ namespace Sep.Git.Tfs.VsCommon
                 .OrderBy(changeset => changeset.ChangesetId)
                 .Select(changeset => BuildTfsChangeset(changeset, remote));
         }
+		public IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
+		{
+			return VersionControl.QueryRootBranchObjects(RecursionType.Full).Select(b => b.Properties.RootItem.Item);
+		}
 
-		  public IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
-		  {
-			  return VersionControl.QueryRootBranchObjects(RecursionType.Full).Select(b => b.Properties.RootItem.Item);
-		  }
+		public int GetRootChangesetForBranch(string tfsPathBranchToCreate)
+		{
+			var allTfsBranches = VersionControl.QueryRootBranchObjects(RecursionType.Full);
+			var tfsBranchToCreate = allTfsBranches.FirstOrDefault(b => b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
+			if (tfsBranchToCreate == null)
+				return -1;
+			string pathFirstBranch = tfsBranchToCreate.Properties.ParentBranch.Item;
+			var changesetIdsFirstChangesetInMainBranch = VersionControl.GetMergeCandidates(pathFirstBranch, tfsPathBranchToCreate, RecursionType.Full).Select(c => c.Changeset.ChangesetId).FirstOrDefault();
 
-		  public int GetRootChangesetForBranch(string tfsPathBranchToCreate)
-		  {
-			  var allTfsBranches = VersionControl.QueryRootBranchObjects(RecursionType.Full);
-			  var tfsBranchToCreate = allTfsBranches.FirstOrDefault(b => b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
-			  if(tfsBranchToCreate == null)
-				  return -1;
-			  string pathFirstBranch = tfsBranchToCreate.Properties.ParentBranch.Item;
-			  var firstBranchChangesets = VersionControl.QueryHistory(pathFirstBranch, VersionSpec.Latest, 0, RecursionType.Full,
-																		  null, new ChangesetVersionSpec((int)1), VersionSpec.Latest, int.MaxValue, true,
-																		  true, true).Cast<Changeset>().ToList();
-			  var firstBranchChangesetIds = firstBranchChangesets.Select(c => c.ChangesetId);
-			  var changesetIdsFirstChangesetInMainBranch = VersionControl.GetMergeCandidates(pathFirstBranch, tfsPathBranchToCreate, RecursionType.Full).Select(c => c.Changeset.ChangesetId).FirstOrDefault();
+			if (changesetIdsFirstChangesetInMainBranch == 0)
+			{
+				return VersionControl.QueryHistory(pathFirstBranch, VersionSpec.Latest, 0,
+						RecursionType.Full, String.Empty, VersionSpec.Latest, VersionSpec.Latest,
+						1, false, false).Cast<Changeset>().First().ChangesetId;
+			}
 
-			  int rootChangesetId; 
-			  if (changesetIdsFirstChangesetInMainBranch == 0)
-				rootChangesetId = firstBranchChangesetIds.First();
-			  else
-				rootChangesetId = firstBranchChangesetIds.First(cId => cId < changesetIdsFirstChangesetInMainBranch);
-
-			  return rootChangesetId;
-		  }
-
+			int step = 5;
+			int upperBound = changesetIdsFirstChangesetInMainBranch - 1;
+			int lowerBound = Math.Max(upperBound - step, 1);
+			//for optimization, retrieve the lesser possible changesets... so 5 by 5
+			while (true)
+			{
+				var firstBranchChangesetIds = VersionControl.QueryHistory(pathFirstBranch, VersionSpec.Latest, 0, RecursionType.Full,
+																			null, new ChangesetVersionSpec(lowerBound), new ChangesetVersionSpec(upperBound), int.MaxValue, true,
+																			false, false).Cast<Changeset>().Select(c => c.ChangesetId).ToList();
+				if (firstBranchChangesetIds.Count != 0)
+					return firstBranchChangesetIds.First(cId => cId < changesetIdsFirstChangesetInMainBranch);
+				else
+				{
+					upperBound = Math.Max(upperBound - step, 1);
+					lowerBound = Math.Max(upperBound - step, 1);
+				}
+			}
+		}
         private ITfsChangeset BuildTfsChangeset(Changeset changeset, GitTfsRemote remote)
         {
             var tfsChangeset = _container.With<ITfsHelper>(this).With<IChangeset>(_bridge.Wrap<WrapperForChangeset, Changeset>(changeset)).GetInstance<TfsChangeset>();
