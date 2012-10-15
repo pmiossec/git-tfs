@@ -118,26 +118,33 @@ namespace Sep.Git.Tfs.VsCommon
 
 		public int GetRootChangesetForBranch(string tfsPathBranchToCreate)
 		{
+			Trace.WriteLine("Looking for all branches...");
 			var allTfsBranches = VersionControl.QueryRootBranchObjects(RecursionType.Full);
 			var tfsBranchToCreate = allTfsBranches.FirstOrDefault(b => b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
 			if (tfsBranchToCreate == null)
 				return -1;
 			string pathFirstBranch = tfsBranchToCreate.Properties.ParentBranch.Item;
+			Trace.WriteLine("Found parent branch : " + pathFirstBranch);
 			var changesetIdsFirstChangesetInMainBranch = VersionControl.GetMergeCandidates(pathFirstBranch, tfsPathBranchToCreate, RecursionType.Full).Select(c => c.Changeset.ChangesetId).FirstOrDefault();
 
 			if (changesetIdsFirstChangesetInMainBranch == 0)
 			{
+				Trace.WriteLine("No changeset in main branch since branch done... (need only to find the last changeset in the main branch)");
 				return VersionControl.QueryHistory(pathFirstBranch, VersionSpec.Latest, 0,
 						RecursionType.Full, String.Empty, VersionSpec.Latest, VersionSpec.Latest,
 						1, false, false).Cast<Changeset>().First().ChangesetId;
 			}
 
+			Trace.WriteLine("First changeset in the main branch after branching : " + changesetIdsFirstChangesetInMainBranch);
+
+			Trace.WriteLine("Try to find the previous changeset...");
 			int step = 5;
 			int upperBound = changesetIdsFirstChangesetInMainBranch - 1;
 			int lowerBound = Math.Max(upperBound - step, 1);
 			//for optimization, retrieve the lesser possible changesets... so 5 by 5
 			while (true)
 			{
+				Trace.WriteLine("Looking for the changeset between changeset id " + lowerBound + " and " + upperBound);
 				var firstBranchChangesetIds = VersionControl.QueryHistory(pathFirstBranch, VersionSpec.Latest, 0, RecursionType.Full,
 																			null, new ChangesetVersionSpec(lowerBound), new ChangesetVersionSpec(upperBound), int.MaxValue, true,
 																			false, false).Cast<Changeset>().Select(c => c.ChangesetId).ToList();
