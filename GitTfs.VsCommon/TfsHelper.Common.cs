@@ -152,6 +152,10 @@ namespace Sep.Git.Tfs.VsCommon
 					return firstBranchChangesetIds.First(cId => cId < changesetIdsFirstChangesetInMainBranch);
 				else
 				{
+					if (upperBound == 1)
+					{
+						throw new GitTfsException("There is a bug in git-tfs init-branch :(");
+					}
 					upperBound = Math.Max(upperBound - step, 1);
 					lowerBound = Math.Max(upperBound - step, 1);
 				}
