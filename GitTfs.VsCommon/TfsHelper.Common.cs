@@ -131,7 +131,7 @@ namespace Sep.Git.Tfs.VsCommon
 			{
 				Trace.WriteLine("No changeset in main branch since branch done... (need only to find the last changeset in the main branch)");
 				return VersionControl.QueryHistory(pathFirstBranch, VersionSpec.Latest, 0,
-						RecursionType.Full, String.Empty, VersionSpec.Latest, VersionSpec.Latest,
+						RecursionType.Full, null, tfsBranchToCreate.Properties.ParentBranch.Version, VersionSpec.Latest,
 						1, false, false).Cast<Changeset>().First().ChangesetId;
 			}
 
