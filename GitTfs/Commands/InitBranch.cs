@@ -48,12 +48,13 @@ namespace Sep.Git.Tfs.Commands
 			this._remoteOptions.Username = defaultRemote.TfsUsername;
 			this._remoteOptions.Password = defaultRemote.TfsPassword;
 
+			var allRemotes = _globals.Repository.ReadAllTfsRemotes();
+
 			if (argument.Trim() != "all")
 			{
 				argument.AssertValidTfsPath();
-				return CreateBranch(defaultRemote, argument);
+				return CreateBranch(defaultRemote, argument, allRemotes);
 			}
-
 
 			bool first = true;
 			foreach (var tfsBranch in defaultRemote.Tfs.GetAllTfsBranchesOrderedByCreation())
@@ -68,19 +69,25 @@ namespace Sep.Git.Tfs.Commands
 					first = false;
 					continue;
 				}
-				var result = CreateBranch(defaultRemote, tfsBranch);
-				if (result != 0)
+				var result = CreateBranch(defaultRemote, tfsBranch, allRemotes);
+				if (result < 0)
 					return result;
 			}
 			return 0;
 		}
 
-		public int CreateBranch(IGitTfsRemote defaultRemote, string tfsRepositoryPath)
+		public int CreateBranch(IGitTfsRemote defaultRemote, string tfsRepositoryPath, IEnumerable<IGitTfsRemote> allRemotes)
 		{
 			Trace.WriteLine("=> Working on TFS branch : " + tfsRepositoryPath);
 
+			if (allRemotes.Count(r => r.TfsRepositoryPath.ToLower() == tfsRepositoryPath.ToLower()) != 0)
+			{
+				Trace.WriteLine("There is already a remote for the tfs repository. Repository ignored!");
+				return 1;
+			}
+
 			var gitBranchName = ExtractGitBranchNameFromTfsRepositoryPath(tfsRepositoryPath);
-			Trace.WriteLine("Git local branche will be :" + gitBranchName);
+			Trace.WriteLine("Git local branch will be :" + gitBranchName);
 
 			var rootChangeSetId = defaultRemote.Tfs.GetRootChangesetForBranch(tfsRepositoryPath);
 			if (rootChangeSetId == -1)
