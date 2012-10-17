@@ -111,56 +111,17 @@ namespace Sep.Git.Tfs.VsCommon
                 .OrderBy(changeset => changeset.ChangesetId)
                 .Select(changeset => BuildTfsChangeset(changeset, remote));
         }
-		public IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
+
+		public virtual IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
 		{
-			return VersionControl.QueryRootBranchObjects(RecursionType.Full).Select(b => b.Properties.RootItem.Item);
+			throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(");
 		}
 
-		public int GetRootChangesetForBranch(string tfsPathBranchToCreate)
+		public virtual int GetRootChangesetForBranch(string tfsPathBranchToCreate)
 		{
-			Trace.WriteLine("Looking for all branches...");
-			var allTfsBranches = VersionControl.QueryRootBranchObjects(RecursionType.Full);
-			var tfsBranchToCreate = allTfsBranches.FirstOrDefault(b => b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
-			if (tfsBranchToCreate == null)
-				return -1;
-			string pathFirstBranch = tfsBranchToCreate.Properties.ParentBranch.Item;
-			Trace.WriteLine("Found parent branch : " + pathFirstBranch);
-			var changesetIdsFirstChangesetInMainBranch = VersionControl.GetMergeCandidates(pathFirstBranch, tfsPathBranchToCreate, RecursionType.Full).Select(c => c.Changeset.ChangesetId).FirstOrDefault();
-
-			if (changesetIdsFirstChangesetInMainBranch == 0)
-			{
-				Trace.WriteLine("No changeset in main branch since branch done... (need only to find the last changeset in the main branch)");
-				return VersionControl.QueryHistory(pathFirstBranch, VersionSpec.Latest, 0,
-						RecursionType.Full, null, tfsBranchToCreate.Properties.ParentBranch.Version, VersionSpec.Latest,
-						1, false, false).Cast<Changeset>().First().ChangesetId;
-			}
-
-			Trace.WriteLine("First changeset in the main branch after branching : " + changesetIdsFirstChangesetInMainBranch);
-
-			Trace.WriteLine("Try to find the previous changeset...");
-			int step = 5;
-			int upperBound = changesetIdsFirstChangesetInMainBranch - 1;
-			int lowerBound = Math.Max(upperBound - step, 1);
-			//for optimization, retrieve the lesser possible changesets... so 5 by 5
-			while (true)
-			{
-				Trace.WriteLine("Looking for the changeset between changeset id " + lowerBound + " and " + upperBound);
-				var firstBranchChangesetIds = VersionControl.QueryHistory(pathFirstBranch, VersionSpec.Latest, 0, RecursionType.Full,
-																			null, new ChangesetVersionSpec(lowerBound), new ChangesetVersionSpec(upperBound), int.MaxValue, true,
-																			false, false).Cast<Changeset>().Select(c => c.ChangesetId).ToList();
-				if (firstBranchChangesetIds.Count != 0)
-					return firstBranchChangesetIds.First(cId => cId < changesetIdsFirstChangesetInMainBranch);
-				else
-				{
-					if (upperBound == 1)
-					{
-						throw new GitTfsException("There is a bug in git-tfs init-branch :(");
-					}
-					upperBound = Math.Max(upperBound - step, 1);
-					lowerBound = Math.Max(upperBound - step, 1);
-				}
-			}
+			throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(");
 		}
+
         private ITfsChangeset BuildTfsChangeset(Changeset changeset, GitTfsRemote remote)
         {
             var tfsChangeset = _container.With<ITfsHelper>(this).With<IChangeset>(_bridge.Wrap<WrapperForChangeset, Changeset>(changeset)).GetInstance<TfsChangeset>();
@@ -556,5 +517,5 @@ namespace Sep.Git.Tfs.VsCommon
         {
             return new WorkItemCheckedInfo(Convert.ToInt32(workitem), true, checkinAction);
         }
-    }
+	}
 }
