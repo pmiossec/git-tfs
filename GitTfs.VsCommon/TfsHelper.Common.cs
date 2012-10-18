@@ -112,15 +112,15 @@ namespace Sep.Git.Tfs.VsCommon
                 .Select(changeset => BuildTfsChangeset(changeset, remote));
         }
 
-		public virtual IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
-		{
-			throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(");
-		}
+        public virtual IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
+        {
+            throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(");
+        }
 
-		public virtual int GetRootChangesetForBranch(string tfsPathBranchToCreate)
-		{
-			throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(");
-		}
+        public virtual int GetRootChangesetForBranch(string tfsPathBranchToCreate)
+        {
+            throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(");
+        }
 
         private ITfsChangeset BuildTfsChangeset(Changeset changeset, GitTfsRemote remote)
         {
@@ -517,5 +517,5 @@ namespace Sep.Git.Tfs.VsCommon
         {
             return new WorkItemCheckedInfo(Convert.ToInt32(workitem), true, checkinAction);
         }
-	}
+    }
 }

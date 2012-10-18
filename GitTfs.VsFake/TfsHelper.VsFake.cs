@@ -231,15 +231,15 @@ namespace Sep.Git.Tfs.VsFake
             throw new NotImplementedException();
         }
 
-		public int GetRootChangesetForBranch(string tfsPathBranchToCreate)
-		{
-		  throw new NotImplementedException();
-		}
+        public int GetRootChangesetForBranch(string tfsPathBranchToCreate)
+        {
+          throw new NotImplementedException();
+        }
 
-		public IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
-		{
-		  throw new NotImplementedException();
-		}
-		#endregion
-	}
+        public IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
+        {
+          throw new NotImplementedException();
+        }
+        #endregion
+    }
 }
