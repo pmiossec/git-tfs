@@ -119,7 +119,7 @@ namespace Sep.Git.Tfs.VsCommon
 
         public virtual int GetRootChangesetForBranch(string tfsPathBranchToCreate)
         {
-            throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(");
+            throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(\n Try using option '--parent-branch'...");
         }
 
         public int GetRootChangesetForBranch(string tfsPathBranchToCreate, string tfsPathParentBranch, int firstChangesetIdOfParentBranch = 1)

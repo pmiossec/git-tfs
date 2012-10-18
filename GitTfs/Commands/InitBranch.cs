@@ -24,6 +24,8 @@ namespace Sep.Git.Tfs.Commands
         private readonly Globals _globals;
         private readonly RemoteOptions _remoteOptions;
 
+        public string ParentBranch { get; set; }
+
         public InitBranch(TextWriter stdout, RemoteOptions remoteOptions, Globals globals, Fetch fetch, Init init)
         {
             this._stdout = stdout;
@@ -35,7 +37,13 @@ namespace Sep.Git.Tfs.Commands
 
         public OptionSet OptionSet
         {
-            get { return _init.OptionSet.Merge(_fetch.OptionSet); }
+            get
+            {
+                return new OptionSet
+                {
+                    { "p|parent-branch=", "Parent branch of the branch (for TFS 2008 only)", v => ParentBranch = v },
+                };
+            }
         }
 
         public int Run(string argument)
@@ -53,7 +61,7 @@ namespace Sep.Git.Tfs.Commands
             if (argument.Trim() != "all")
             {
                 argument.AssertValidTfsPath();
-                return CreateBranch(defaultRemote, argument, allRemotes);
+                return CreateBranch(defaultRemote, argument, allRemotes, ParentBranch);
             }
 
             bool first = true;
@@ -76,7 +84,7 @@ namespace Sep.Git.Tfs.Commands
             return 0;
         }
 
-        public int CreateBranch(IGitTfsRemote defaultRemote, string tfsRepositoryPath, IEnumerable<IGitTfsRemote> allRemotes)
+        public int CreateBranch(IGitTfsRemote defaultRemote, string tfsRepositoryPath, IEnumerable<IGitTfsRemote> allRemotes, string tfsRepositoryPathParentBranch = null)
         {
             Trace.WriteLine("=> Working on TFS branch : " + tfsRepositoryPath);
 
@@ -89,7 +97,19 @@ namespace Sep.Git.Tfs.Commands
             var gitBranchName = ExtractGitBranchNameFromTfsRepositoryPath(tfsRepositoryPath);
             Trace.WriteLine("Git local branch will be :" + gitBranchName);
 
-            var rootChangeSetId = defaultRemote.Tfs.GetRootChangesetForBranch(tfsRepositoryPath);
+            int rootChangeSetId;
+            if (tfsRepositoryPathParentBranch == null)
+                rootChangeSetId = defaultRemote.Tfs.GetRootChangesetForBranch(tfsRepositoryPath);
+            else
+            {
+                Trace.WriteLine("TFS 2008 Compatible mode!");
+                var tfsRepositoryPathParentBranchFinded = allRemotes.FirstOrDefault(r => r.TfsRepositoryPath.ToLower() == tfsRepositoryPathParentBranch.ToLower());
+                if(tfsRepositoryPathParentBranchFinded == null)
+                    throw new GitTfsException("error: The Tfs parent branch '" + tfsRepositoryPathParentBranch + "' can not be found in the Git repository\nPlease init it before...\n");
+
+                rootChangeSetId = defaultRemote.Tfs.GetRootChangesetForBranch(tfsRepositoryPath, tfsRepositoryPathParentBranchFinded.TfsRepositoryPath);
+            }
+
             if (rootChangeSetId == -1)
             {
                 throw new GitTfsException("error: No root changeset found :( \n");
