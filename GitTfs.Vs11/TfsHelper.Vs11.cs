@@ -141,6 +141,23 @@ namespace Sep.Git.Tfs.Vs11
             }
             return null;
         }
+
+        public override IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
+        {
+            return VersionControl.QueryRootBranchObjects(RecursionType.Full).Select(b => b.Properties.RootItem.Item);
+        }
+
+        public override int GetRootChangesetForBranch(string tfsPathBranchToCreate)
+        {
+            Trace.WriteLine("Looking for all branches...");
+            var allTfsBranches = VersionControl.QueryRootBranchObjects(RecursionType.Full);
+            var tfsBranchToCreate = allTfsBranches.FirstOrDefault(b => b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
+            if (tfsBranchToCreate == null)
+                return -1;
+            string tfsPathParentBranch = tfsBranchToCreate.Properties.ParentBranch.Item;
+            Trace.WriteLine("Found parent branch : " + tfsPathParentBranch);
+            return GetRootChangesetForBranch(tfsPathBranchToCreate, tfsPathParentBranch, ((ChangesetVersionSpec)tfsBranchToCreate.Properties.ParentBranch.Version).ChangesetId);
+        }
     }
 
     public class ItemDownloadStrategy : IItemDownloadStrategy
