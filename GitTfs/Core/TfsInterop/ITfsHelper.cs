@@ -28,6 +28,7 @@ namespace Sep.Git.Tfs.Core.TfsInterop
         long ShowCheckinDialog(IWorkspace workspace, IPendingChange[] pendingChanges, IEnumerable<IWorkItemCheckedInfo> checkedInfos, string checkinComment);
         void CleanupWorkspaces(string workingDirectory);
         int GetRootChangesetForBranch(string tfsPathBranchToCreate);
+        int GetRootChangesetForBranch(string tfsPathBranchToCreate, string tfsPathParentBranch, int firstChangesetIdOfParentBranch = 1);
         IEnumerable<string> GetAllTfsBranchesOrderedByCreation();
         void EnsureAuthenticated();
     }

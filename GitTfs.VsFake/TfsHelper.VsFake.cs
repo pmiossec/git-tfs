@@ -236,6 +236,11 @@ namespace Sep.Git.Tfs.VsFake
           throw new NotImplementedException();
         }
 
+        public int GetRootChangesetForBranch(string tfsPathBranchToCreate, string tfsPathParentBranch, int firstChangesetIdOfParentBranch = 1)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<string> GetAllTfsBranchesOrderedByCreation()
         {
           throw new NotImplementedException();
