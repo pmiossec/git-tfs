@@ -119,7 +119,7 @@ namespace Sep.Git.Tfs.VsCommon
 
         public virtual int GetRootChangesetForBranch(string tfsPathBranchToCreate)
         {
-            throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(\n Try using option '--parent-branch'...");
+            throw new GitTfsException("This version of TFS Server doesn't permit to use this command :(\nTry using option '--parent-branch'...");
         }
 
         public int GetRootChangesetForBranch(string tfsPathBranchToCreate, string tfsPathParentBranch, int firstChangesetIdOfParentBranch = 1)
@@ -153,7 +153,7 @@ namespace Sep.Git.Tfs.VsCommon
                 {
                     if (upperBound == 1)
                     {
-                        throw new GitTfsException("There is a bug in git-tfs init-branch :(");
+                        throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find a previous changeset to changeset n°" + changesetIdsFirstChangesetInMainBranch + " in the branch!!!");
                     }
                     upperBound = Math.Max(upperBound - step, 1);
                     lowerBound = Math.Max(upperBound - step, 1);
