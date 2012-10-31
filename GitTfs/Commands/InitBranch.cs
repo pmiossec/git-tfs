@@ -14,7 +14,7 @@ using Sep.Git.Tfs.Util;
 namespace Sep.Git.Tfs.Commands
 {
     [Pluggable("init-branch")]
-    [Description("[$/Repository/path|all]\n ex : git tfs init-branch $/Repository/ProjectBranch\n      git tfs init-branch all\n")]
+    [Description("[$/Repository/path|all]\n ex : git tfs init-branch $/Repository/ProjectBranch\n      git tfs init-branch all\n      git tfs init-branch --parent-branch=$/Repository/ProjectParentBranch $/Repository/ProjectBranch")]
     [RequiresValidGitRepository]
     public class InitBranch : GitTfsCommand
     {
@@ -41,7 +41,7 @@ namespace Sep.Git.Tfs.Commands
             {
                 return new OptionSet
                 {
-                    { "p|parent-branch=", "Parent branch of the branch (for TFS 2008 only)", v => ParentBranch = v },
+                    { "p|parent-branch=", "TFS Parent branch of the TFS branch to clone (TFS 2008 only!) ex:$/Repository/ProjectParentBranch", v => ParentBranch = v },
                 };
             }
         }
