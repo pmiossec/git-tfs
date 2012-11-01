@@ -124,41 +124,29 @@ namespace Sep.Git.Tfs.VsCommon
 
         public int GetRootChangesetForBranch(string tfsPathBranchToCreate, string tfsPathParentBranch, int firstChangesetIdOfParentBranch = 1)
         {
-            var changesetIdsFirstChangesetInMainBranch = VersionControl.GetMergeCandidates(tfsPathParentBranch, tfsPathBranchToCreate, RecursionType.Full).Select(c => c.Changeset.ChangesetId).FirstOrDefault();
+            var firstChangesetInBranchToCreate = VersionControl.QueryHistory(tfsPathBranchToCreate, VersionSpec.Latest, 0, RecursionType.Full,
+                null, null, null, int.MaxValue, true, false, false).Cast<Changeset>().LastOrDefault();
 
-            if (changesetIdsFirstChangesetInMainBranch == 0)
+            if (firstChangesetInBranchToCreate == null)
             {
-                Trace.WriteLine("No changeset in main branch since branch done... (need only to find the last changeset in the main branch)");
-                return VersionControl.QueryHistory(tfsPathParentBranch, VersionSpec.Latest, 0,
-                        RecursionType.Full, null, new ChangesetVersionSpec(firstChangesetIdOfParentBranch), VersionSpec.Latest,
-                        1, false, false).Cast<Changeset>().First().ChangesetId;
+                throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find first changeset for " + tfsPathBranchToCreate);
             }
 
-            Trace.WriteLine("First changeset in the main branch after branching : " + changesetIdsFirstChangesetInMainBranch);
+            var mergedItemsToFirstChangesetInBranchToCreate =
+                VersionControl.TrackMerges(new int[] {firstChangesetInBranchToCreate.ChangesetId},
+                                           new ItemIdentifier(tfsPathBranchToCreate),
+                                           new ItemIdentifier[] {new ItemIdentifier(tfsPathParentBranch),}, null);
 
-            Trace.WriteLine("Try to find the previous changeset...");
-            int step = 5;
-            int upperBound = changesetIdsFirstChangesetInMainBranch - 1;
-            int lowerBound = Math.Max(upperBound - step, 1);
-            //for optimization, retrieve the lesser possible changesets... so 5 by 5
-            while (true)
+            var lastChangesetsMergeFromParentBranch = mergedItemsToFirstChangesetInBranchToCreate.LastOrDefault();
+
+            if (lastChangesetsMergeFromParentBranch == null)
             {
-                Trace.WriteLine("Looking for the changeset between changeset id " + lowerBound + " and " + upperBound);
-                var firstBranchChangesetIds = VersionControl.QueryHistory(tfsPathParentBranch, VersionSpec.Latest, 0, RecursionType.Full,
-                                null, new ChangesetVersionSpec(lowerBound), new ChangesetVersionSpec(upperBound), int.MaxValue, true,
-                                false, false).Cast<Changeset>().Select(c => c.ChangesetId).ToList();
-                if (firstBranchChangesetIds.Count != 0)
-                    return firstBranchChangesetIds.First(cId => cId < changesetIdsFirstChangesetInMainBranch);
-                else
-                {
-                    if (upperBound == 1)
-                    {
-                        throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find a previous changeset to changeset n°" + changesetIdsFirstChangesetInMainBranch + " in the branch!!!");
-                    }
-                    upperBound = Math.Max(upperBound - step, 1);
-                    lowerBound = Math.Max(upperBound - step, 1);
-                }
+                throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find root changeset for " + tfsPathBranchToCreate + " branch in " + tfsPathParentBranch + " branch");
             }
+
+            var rootChangesetInParentBranch = lastChangesetsMergeFromParentBranch.SourceChangeset;
+
+            return rootChangesetInParentBranch.ChangesetId;
         }
 
         private ITfsChangeset BuildTfsChangeset(Changeset changeset, GitTfsRemote remote)
