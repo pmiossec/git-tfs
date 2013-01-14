@@ -86,7 +86,15 @@ namespace Sep.Git.Tfs.Commands
             // TFS exists (by checking git-tfs-id mark in commit's comments).
             // The process is similar to bootstrapping.
             globals.Repository.MoveTfsRefForwardIfNeeded(remote);
-            remote.Fetch();
+            try
+            {
+                globals.Repository.DisableGarbageCollection();
+                remote.Fetch();
+            }
+            finally
+            {
+                globals.Repository.RestoreGarbageCollection();
+            }
         }
 
         private IEnumerable<IGitTfsRemote> GetRemotesToFetch(IList<string> args)

@@ -178,7 +178,15 @@ namespace Sep.Git.Tfs.Commands
             Trace.WriteLine("Remote created!");
 
             Trace.WriteLine("Try fetching changesets...");
-            tfsRemote.Fetch();
+            try
+            {
+                _globals.Repository.DisableGarbageCollection();
+                tfsRemote.Fetch();
+            }
+            finally
+            {
+                _globals.Repository.RestoreGarbageCollection();
+            }
             Trace.WriteLine("Changesets fetched!");
 
             Trace.WriteLine("Try creating the local branch...");

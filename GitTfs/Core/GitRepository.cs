@@ -394,5 +394,20 @@ namespace Sep.Git.Tfs.Core
             Signature author = new Signature(owner, emailOwner, creationDate);
             _repository.Notes.Add(new ObjectId(sha), content, author, author, "commits");
         }
+
+        private static string _savedGarbageCollectionState = "NO_VALUE";
+        public void DisableGarbageCollection()
+        {
+            _savedGarbageCollectionState = _repository.Config.Get("gc.auto", "NO_VALUE");
+            _repository.Config.Set("gc.auto", "0");
+        }
+
+        public void RestoreGarbageCollection()
+        {
+            if (string.IsNullOrWhiteSpace(_savedGarbageCollectionState) || _savedGarbageCollectionState == "NO_VALUE")
+                _repository.Config.Unset("gc.auto");
+            else
+                _repository.Config.Set("gc.auto", _savedGarbageCollectionState);
+        }
     }
 }

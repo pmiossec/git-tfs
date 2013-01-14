@@ -30,5 +30,7 @@ namespace Sep.Git.Tfs.Core
         string FindCommitHashByCommitMessage(string patternToFind);
         void CreateTag(string name, string sha, string comment, string Owner, string emailOwner, System.DateTime creationDate);
         void CreateNote(string sha, string content, string owner, string emailOwner, DateTime creationDate);
+        void DisableGarbageCollection();
+        void RestoreGarbageCollection();
     }
 }
