@@ -46,7 +46,21 @@ namespace Sep.Git.Tfs.VsCommon
 
                 Trace.WriteLine("Looking for all branches...");
                 var allTfsBranches = VersionControl.QueryRootBranchObjects(RecursionType.Full);
-                var tfsBranchToCreate = allTfsBranches.FirstOrDefault(b => b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
+                if (allTfsBranches == null)
+                {
+                    Trace.WriteLine("error: No TFS root branches found!");
+                    return -1;
+                }
+                Trace.WriteLine("Get root branches :");
+                foreach (var branch in allTfsBranches)
+                {
+                    Trace.WriteLine(" *"+ branch);
+                }
+
+                var tfsBranchToCreate = allTfsBranches.FirstOrDefault(b =>
+                    b.Properties != null && b.Properties.RootItem != null && b.Properties.RootItem.Item != null
+                    && b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
+                Trace.WriteLine("Get tfsBranchToCreate.");
                 if (tfsBranchToCreate == null)
                 {
                     Trace.WriteLine("error: TFS branches "+ tfsPathBranchToCreate +" not found!");
@@ -58,7 +72,13 @@ namespace Sep.Git.Tfs.VsCommon
                     throw new GitTfsException("error : the branch you try to init '" + tfsPathBranchToCreate + "' is a root branch (e.g. has no parents).",
                         new List<string>{"Clone this branch from Tfs instead of trying to init it!"});
                 }
-                
+
+                if (string.IsNullOrWhiteSpace(tfsBranchToCreate.Properties.ParentBranch.Item))
+                {
+                    Trace.WriteLine("error: string.IsNullOrWhiteSpace(tfsBranchToCreate.Properties.ParentBranch.Item)");
+                    return -1;
+                }
+
                 tfsPathParentBranch = tfsBranchToCreate.Properties.ParentBranch.Item;
                 Trace.WriteLine("Found parent branch : " + tfsPathParentBranch);
 
