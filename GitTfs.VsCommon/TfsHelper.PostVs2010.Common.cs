@@ -45,14 +45,25 @@ namespace Sep.Git.Tfs.VsCommon
             return _bridge.Wrap<WrapperForBranchObject, BranchObject>(branches);
         }
 
-        public override int GetRootChangesetForBranch(string tfsPathBranchToCreate, string tfsPathParentBranch = null)
+        public override IList<RootBranch> GetRootChangesetForBranch(string tfsPathBranchToCreate, string tfsPathParentBranch = null)
+        {
+            var rootBranches = new List<RootBranch>();
+            GetRootChangesetForBranch(rootBranches, tfsPathBranchToCreate, tfsPathParentBranch);
+            return rootBranches;
+        }
+
+        private void GetRootChangesetForBranch(IList<RootBranch> rootBranches, string tfsPathBranchToCreate, string tfsPathParentBranch = null)
         {
             try
             {
                 if (!CanGetBranchInformation)
                 {
                     Trace.WriteLine("Try TFS2008 compatibility mode...");
-                    return base.GetRootChangesetForBranch(tfsPathBranchToCreate, tfsPathParentBranch);
+                    foreach (var rootBranch in base.GetRootChangesetForBranch(tfsPathBranchToCreate, tfsPathParentBranch))
+                    {
+                        AddNewRootBranch(rootBranches, rootBranch);
+                    }
+                    return;
                 }
 
                 if (!string.IsNullOrWhiteSpace(tfsPathParentBranch))
@@ -90,16 +101,30 @@ namespace Sep.Git.Tfs.VsCommon
                                  null)
                     .OrderBy(x => x.SourceChangeset.ChangesetId);
 
+                string renameFromBranch;
                 var rootChangesetInParentBranch =
-                    GetRelevantChangesetBasedOnChangeType(mergedItemsToFirstChangesetInBranchToCreate, tfsPathParentBranch, tfsPathBranchToCreate);
+                    GetRelevantChangesetBasedOnChangeType(mergedItemsToFirstChangesetInBranchToCreate, tfsPathParentBranch, tfsPathBranchToCreate, out renameFromBranch);
 
-                return rootChangesetInParentBranch.ChangesetId;
+                AddNewRootBranch(rootBranches, new RootBranch(rootChangesetInParentBranch.ChangesetId, tfsPathBranchToCreate));
+                Trace.WriteLineIf(renameFromBranch != null, "Found original branch '" + renameFromBranch + "' (renamed in branch '" + tfsPathBranchToCreate + "')");
+                if (renameFromBranch != null)
+                    GetRootChangesetForBranch(rootBranches, renameFromBranch);
             }
             catch (FeatureNotSupportedException ex)
             {
                 Trace.WriteLine(ex.Message);
-                return base.GetRootChangesetForBranch(tfsPathBranchToCreate, tfsPathParentBranch);
+                foreach (var rootBranch in base.GetRootChangesetForBranch(tfsPathBranchToCreate, tfsPathParentBranch))
+                {
+                    AddNewRootBranch(rootBranches, rootBranch);
+                }
             }
+        }
+
+        private static void AddNewRootBranch(IList<RootBranch> rootBranches, RootBranch rootBranch)
+        {
+            if (rootBranches.Any())
+                rootBranch.IsRenamedBranch = true;
+            rootBranches.Insert(0, rootBranch);
         }
 
         /// <summary>
@@ -109,6 +134,7 @@ namespace Sep.Git.Tfs.VsCommon
         /// <param name="merges">An array of <see cref="ExtendedMerge"/> objects describing the a set of merges.</param>
         /// <param name="tfsPathParentBranch">The tfs Path Parent Branch.</param>
         /// <param name="tfsPathBranchToCreate">The tfs Path Branch To Create.</param>
+        /// <param name="renameFromBranch"></param>
         /// <remarks>
         /// Each <see cref="ChangeType"/> uses the SourceChangeset, SourceItem, TargetChangeset, and TargetItem 
         /// properties with different semantics, depending on what it needs to describe, so the strategy to determine
@@ -116,16 +142,20 @@ namespace Sep.Git.Tfs.VsCommon
         /// </remarks>
         /// <returns>the <see cref="ChangesetSummary"/> of the changeset found.
         /// </returns>
-        private static ChangesetSummary GetRelevantChangesetBasedOnChangeType(IEnumerable<ExtendedMerge> merges, string tfsPathParentBranch, string tfsPathBranchToCreate)
+        private static ChangesetSummary GetRelevantChangesetBasedOnChangeType(IEnumerable<ExtendedMerge> merges, string tfsPathParentBranch, string tfsPathBranchToCreate, out string renameFromBranch)
         {
+            renameFromBranch = null;
             merges = (merges ?? new ExtendedMerge[] {}).ToArray();
             var merge = merges.LastOrDefault(m => m.SourceItem.Item.ServerItem.Equals(tfsPathParentBranch, StringComparison.InvariantCultureIgnoreCase))
                      ?? merges.LastOrDefault();
 
             if (merge == null)
             {
-                throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find root changeset for " + tfsPathBranchToCreate + " branch in " + tfsPathParentBranch + " branch");
+                    throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find root changeset for " + tfsPathBranchToCreate + " branch in " + tfsPathParentBranch + " branch");
             }
+
+            if (merge.SourceItem.ChangeType.HasFlag(ChangeType.Rename))
+                renameFromBranch = merge.TargetItem.Item;
 
             if (merge.SourceItem.ChangeType.HasFlag(ChangeType.Branch)
                 || merge.SourceItem.ChangeType.HasFlag(ChangeType.Merge)
