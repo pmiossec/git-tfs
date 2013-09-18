@@ -77,6 +77,13 @@ namespace Sep.Git.Tfs.Util
                             compartments.Updated.Add(ApplicableChange.Update(change.GitPath, change.Info.Mode));
                     }
                 }
+                if (change.Change.Item.ItemType == TfsItemType.Folder
+                    && change.GitPath == string.Empty
+                    && change.Change.ChangeType.IncludesOneOf(TfsChangeType.Delete))
+                {
+                    compartments.Deleted.Add(ApplicableChange.Delete(change.GitPath));
+                }
+
             }
             return compartments.Deleted.Concat(compartments.Updated);
         }
