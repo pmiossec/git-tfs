@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -33,11 +33,22 @@ namespace Sep.Git.Tfs.Core
             var resolver = new PathResolver(Summary.Remote, initialTree);
             var sieve = new ChangeSieve(_changeset, resolver);
             workspace.Get(_changeset.ChangesetId, sieve.GetChangesToFetch());
-            foreach (var change in sieve.GetChangesToApply())
+            var changes = sieve.GetChangesToApply().ToList();
+            if (!IsRenameChangeset(changes, workspace.Remote.TfsRepositoryPath))
             {
-                Apply(change, treeBuilder, workspace, initialTree);
+                foreach (var change in changes)
+                {
+                    Apply(change, treeBuilder, workspace, initialTree);
+                }
             }
             return MakeNewLogEntry();
+        }
+
+        private bool IsRenameChangeset(IEnumerable<ApplicableChange> changes, string tfsRepositoryPath)
+        {
+            return changes.Any(c => c.Mode == LibGit2Sharp.Mode.Nonexistent
+                             && c.Type == ChangeType.Delete
+                             && c.GitPath == string.Empty);
         }
 
         private void Apply(ApplicableChange change, IGitTreeModifier treeBuilder, ITfsWorkspace workspace, IDictionary<string, GitObject> initialTree)
@@ -52,8 +63,8 @@ namespace Sep.Git.Tfs.Core
                     break;
                 default:
                     throw new NotImplementedException("Unsupported change type: " + change.Type);
+                }
             }
-        }
 
         private void Update(ApplicableChange change, IGitTreeModifier treeBuilder, ITfsWorkspace workspace, IDictionary<string, GitObject> initialTree)
         {
