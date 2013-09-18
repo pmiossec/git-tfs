@@ -31,11 +31,23 @@ namespace Sep.Git.Tfs.Core
         {
             var initialTree = workspace.Remote.Repository.GetObjects(lastCommit);
             workspace.Get(_changeset);
-            foreach (var change in Sort(_changeset.Changes))
+
+            var changes = Sort(_changeset.Changes);
+            if (!IsRenameChangeset(changes, workspace.Remote.TfsRepositoryPath))
             {
-                Apply(change, index, workspace, initialTree);
+                foreach (var change in changes)
+                {
+                    Apply(change, index, workspace, initialTree);
+                }
             }
             return MakeNewLogEntry();
+        }
+
+        private bool IsRenameChangeset(IEnumerable<IChange> changes, string tfsRepositoryPath)
+        {
+            return changes.Any(c => c.Item.ItemType == TfsItemType.Folder
+                             && c.ChangeType.IncludesOneOf(TfsChangeType.Delete)
+                             && c.Item.ServerItem == tfsRepositoryPath);
         }
 
         private void Apply(IChange change, GitIndexInfo index, ITfsWorkspace workspace, IDictionary<string, GitObject> initialTree)
