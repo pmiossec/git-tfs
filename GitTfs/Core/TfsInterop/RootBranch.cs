@@ -10,5 +10,6 @@ namespace Sep.Git.Tfs.Core.TfsInterop
 
         public int RootChangeset { get; private set; }
         public string TfsBranchPath { get; private set; }
+        public bool IsRenamedBranch { get; set; }
     }
 }

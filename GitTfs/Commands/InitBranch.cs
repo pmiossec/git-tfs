@@ -111,7 +111,7 @@ namespace Sep.Git.Tfs.Commands
                                           " have not be found in the Git repository. The branch containing the changeset should not have been created. Please do it before retrying!!\n");
                 var tfsRemote = CreateBranch(defaultRemote, cbd.TfsRepositoryPath, cbd.Sha1RootCommit, cbd.GitBranchNameExpected);
                 RemoteCreated = tfsRemote;
-            if (!NoFetch)
+                if (rootBranch.IsRenamedBranch || !NoFetch)
                 FetchRemote(tfsRemote, false, !DontCreateGitBranch);
             else
                 Trace.WriteLine("Not fetching changesets, --nofetch option specified");

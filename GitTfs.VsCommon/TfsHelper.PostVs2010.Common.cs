@@ -57,6 +57,11 @@ namespace Sep.Git.Tfs.VsCommon
             var rootBranches = new List<RootBranch>();
             GetRootChangesetForBranch(rootBranches, tfsPathBranchToCreate, tfsPathParentBranch);
             rootBranches.Reverse();
+            //Find a better way to do that!
+            foreach (var rootBranch in rootBranches.Take(rootBranches.Count-1))
+            {
+                rootBranch.IsRenamedBranch = true;
+            }
             return rootBranches;
         }
 
