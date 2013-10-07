@@ -827,5 +827,52 @@ namespace Sep.Git.Tfs.Core
         {
             return TfsUrl.Equals(tfsUrl, StringComparison.OrdinalIgnoreCase) || Aliases.Contains(tfsUrl, StringComparison.OrdinalIgnoreCase);
         }
+
+        private string ExtractGitBranchNameFromTfsRepositoryPath(string tfsRepositoryPath)
+        {
+            string gitBranchNameExpected;
+            if (tfsRepositoryPath.IndexOf("$/") == 0)
+            {
+                gitBranchNameExpected = tfsRepositoryPath.Remove(0, tfsRepositoryPath.IndexOf('/', 2) + 1);
+            }
+            else
+            {
+                gitBranchNameExpected = tfsRepositoryPath;
+            }
+            gitBranchNameExpected = gitBranchNameExpected.ToGitRefName();
+            var gitBranchName = Repository.AssertValidBranchName(gitBranchNameExpected);
+            stdout.WriteLine("The name of the local branch will be : " + gitBranchName);
+            return gitBranchName;
+        }
+
+        public IGitTfsRemote InitBranch(RemoteOptions remoteOptions, string tfsRepositoryPath, string sha1RootCommit, string gitBranchNameExpected = null)
+        {
+            Trace.WriteLine("Begin process of creating branch for remote :" + tfsRepositoryPath);
+            // TFS string representations of repository paths do not end in trailing slashes
+            tfsRepositoryPath = (tfsRepositoryPath ?? string.Empty).TrimEnd('/');
+
+            string gitBranchName;
+            if (!string.IsNullOrWhiteSpace(gitBranchNameExpected))
+                gitBranchName = ExtractGitBranchNameFromTfsRepositoryPath(gitBranchNameExpected);
+            else
+                gitBranchName = ExtractGitBranchNameFromTfsRepositoryPath(tfsRepositoryPath);
+            if (string.IsNullOrWhiteSpace(gitBranchName))
+                throw new GitTfsException("error: The Git branch name '" + gitBranchName + "' is not valid...\n");
+            Trace.WriteLine("Git local branch will be :" + gitBranchName);
+
+            Trace.WriteLine("Try creating remote...");
+            var tfsRemote = Repository.CreateTfsRemote(new RemoteInfo
+            {
+                Id = gitBranchName,
+                Url = this.TfsUrl,
+                Repository = tfsRepositoryPath,
+                RemoteOptions = remoteOptions
+            }, System.String.Empty);
+            if (!Repository.CreateBranch(tfsRemote.RemoteRef, sha1RootCommit))
+                throw new GitTfsException("error: Fail to create remote branch ref file!");
+            Trace.WriteLine("Remote created!");
+            return tfsRemote;
+        }
+
     }
 }
