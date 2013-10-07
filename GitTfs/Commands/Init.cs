@@ -154,5 +154,20 @@ namespace Sep.Git.Tfs.Commands
             return expectedRefName.Trim('/');
         }
 
+        public static string ToGitBranchNameFromTfsRepositoryPath(this string tfsRepositoryPath)
+        {
+            string gitBranchNameExpected;
+            if (tfsRepositoryPath.IndexOf("$/") == 0)
+            {
+                gitBranchNameExpected = tfsRepositoryPath.Remove(0, tfsRepositoryPath.IndexOf('/', 2) + 1);
+            }
+            else
+            {
+                gitBranchNameExpected = tfsRepositoryPath;
+            }
+            gitBranchNameExpected = gitBranchNameExpected.ToGitRefName();
+            return gitBranchNameExpected;
+        }
+
     }
 }
