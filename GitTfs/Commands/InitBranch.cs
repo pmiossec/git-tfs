@@ -98,14 +98,16 @@ namespace Sep.Git.Tfs.Commands
                                               "' can not be found in the Git repository\nPlease init it first and try again...\n");
 
                 creationBranchData = defaultRemote.Tfs.GetRootChangesetForBranch(tfsBranchPath, tfsRepositoryPathParentBranchFound.TfsRepositoryPath);
-            }
+        }
 
-            InitBranchSupportingRename(tfsBranchPath, gitBranchNameExpected, creationBranchData, defaultRemote);
+            IFetchResult fetchResult;
+            InitBranchSupportingRename(tfsBranchPath, gitBranchNameExpected, creationBranchData, defaultRemote, true, out fetchResult);
             return GitTfsExitCodes.OK;
         }
 
-        private IGitTfsRemote InitBranchSupportingRename(string tfsBranchPath, string gitBranchNameExpected, IList<RootBranch> creationBranchData, IGitTfsRemote defaultRemote)
+        private IGitTfsRemote InitBranchSupportingRename(string tfsBranchPath, string gitBranchNameExpected, IList<RootBranch> creationBranchData, IGitTfsRemote defaultRemote, bool failWithException, out IFetchResult fetchResult)
         {
+            fetchResult = null;
             _stdout.WriteLine("Branches to Initialize successively :");
             foreach (var branch in creationBranchData)
             {
@@ -123,18 +125,21 @@ namespace Sep.Git.Tfs.Commands
 
                 cbd.Sha1RootCommit = _globals.Repository.FindCommitHashByChangesetId(cbd.RootChangesetId);
                 if (string.IsNullOrWhiteSpace(cbd.Sha1RootCommit))
-                    //TODO : Fix to not throw an exception!!!
+                {
+                    if (failWithException)
                     throw new GitTfsException("error: The root changeset " + cbd.RootChangesetId +
                                           " have not be found in the Git repository. The branch containing the changeset should not have been created. Please do it before retrying!!\n");
-
+                    return null;
+                }
+                
                 Trace.WriteLine("Found commit " + cbd.Sha1RootCommit + " for changeset :" + cbd.RootChangesetId);
 
                 tfsRemote = CreateBranch(defaultRemote, cbd.TfsRepositoryPath, cbd.Sha1RootCommit, cbd.GitBranchNameExpected);
                 RemoteCreated = tfsRemote;
                 if (rootBranch.IsRenamedBranch || !NoFetch)
-                FetchRemote(tfsRemote, false, !DontCreateGitBranch);
-                else
-                    Trace.WriteLine("Not fetching changesets, --nofetch option specified");
+                    fetchResult = FetchRemote(tfsRemote, false, !DontCreateGitBranch);
+            else
+                Trace.WriteLine("Not fetching changesets, --nofetch option specified");
             }
             return tfsRemote;
         }
@@ -208,14 +213,15 @@ namespace Sep.Git.Tfs.Commands
                         Trace.WriteLine("=> Working on TFS branch : " + tfsBranch.TfsRepositoryPath);
                         if (tfsBranch.TfsRemote == null)
                         {
-                            tfsBranch.TfsRemote = InitBranchSupportingRename(tfsBranch.TfsRepositoryPath, null, tfsBranch.CreationBranchData, defaultRemote);
+                            IFetchResult fetchResult;
+                            tfsBranch.TfsRemote = InitBranchSupportingRename(tfsBranch.TfsRepositoryPath, null, tfsBranch.CreationBranchData, defaultRemote, false, out fetchResult);
                             if (tfsBranch.TfsRemote != null)
                             {
+                                tfsBranch.IsEntirelyFetched = fetchResult.IsSuccess;
                                 isSomethingDone = true;
-                                continue;
-                            }
+                }
                         }
-                        if (tfsBranch.TfsRemote != null)
+                        else
                         {
                             var lastFetchedChangesetId = tfsBranch.TfsRemote.MaxChangesetId;
                             Trace.WriteLine("Fetching remote :" + tfsBranch.TfsRemote.Id);
@@ -293,7 +299,7 @@ namespace Sep.Git.Tfs.Commands
 
             Trace.WriteLine("Try creating remote...");
             var tfsRemote = _globals.Repository.CreateTfsRemote(new RemoteInfo
-                {
+            {
                     Id = gitBranchName,
                     Url = defaultRemote.TfsUrl,
                     Repository = tfsRepositoryPath,
@@ -315,11 +321,11 @@ namespace Sep.Git.Tfs.Commands
 
             if (createBranch && fetchResult.IsSuccess && tfsRemote.Id != GitTfsConstants.DefaultRepositoryId)
             {
-                Trace.WriteLine("Try creating the local branch...");
+            Trace.WriteLine("Try creating the local branch...");
                 if (!_globals.Repository.CreateBranch("refs/heads/" + tfsRemote.Id, tfsRemote.MaxCommitHash))
-                    _stdout.WriteLine("warning: Fail to create local branch ref file!");
-                else
-                    Trace.WriteLine("Local branch created!");
+                _stdout.WriteLine("warning: Fail to create local branch ref file!");
+            else
+                Trace.WriteLine("Local branch created!");
             }
 
             Trace.WriteLine("Cleaning...");
