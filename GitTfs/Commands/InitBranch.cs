@@ -115,6 +115,7 @@ namespace Sep.Git.Tfs.Commands
             }
 
             IGitTfsRemote tfsRemote = null;
+            var remoteToDelete = new List<IGitTfsRemote>();
             foreach (var rootBranch in creationBranchData)
             {
                 Trace.WriteLine("Processing " + (rootBranch.IsRenamedBranch ? "renamed " : string.Empty) + "branch :" + rootBranch.TfsBranchPath + " (" +
@@ -137,9 +138,18 @@ namespace Sep.Git.Tfs.Commands
                 tfsRemote = CreateBranch(defaultRemote, cbd.TfsRepositoryPath, cbd.Sha1RootCommit, cbd.GitBranchNameExpected);
                 RemoteCreated = tfsRemote;
                 if (rootBranch.IsRenamedBranch || !NoFetch)
+                {
                     fetchResult = FetchRemote(tfsRemote, false, !DontCreateGitBranch && !rootBranch.IsRenamedBranch);
+                    if(fetchResult.IsSuccess && rootBranch.IsRenamedBranch)
+                        remoteToDelete.Add(tfsRemote);
+                    
+                }
                 else
                     Trace.WriteLine("Not fetching changesets, --nofetch option specified");
+            }
+            foreach (var gitTfsRemote in remoteToDelete)
+            {
+                _globals.Repository.DeleteTfsRemote(gitTfsRemote);
             }
             return tfsRemote;
         }
