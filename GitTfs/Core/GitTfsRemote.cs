@@ -311,12 +311,22 @@ namespace Sep.Git.Tfs.Core
 
         public IFetchResult FetchWithMerge(long mergeChangesetId, bool stopOnFailMergeCommit = false, params string[] parentCommitsHashes)
         {
-            var fetchResult = new FetchResult{IsSuccess = true};
+            return FetchWithMerge(mergeChangesetId, stopOnFailMergeCommit, -1, parentCommitsHashes);
+        }
+
+        public IFetchResult FetchWithMerge(long mergeChangesetId, bool stopOnFailMergeCommit = false, int lastChangesetIdToFetch = -1, params string[] parentCommitsHashes)
+        {
+            var fetchResult = new FetchResult { IsSuccess = true };
             var fetchedChangesets = FetchChangesets().ToList();
             fetchResult.NewChangesetCount = fetchedChangesets.Count;
             foreach (var changeset in fetchedChangesets)
             {
                 var log = Apply(MaxCommitHash, changeset);
+                if (lastChangesetIdToFetch > 0 && changeset.Summary.ChangesetId > lastChangesetIdToFetch)
+                {
+                    fetchResult.LastFetchedChangesetId = MaxChangesetId;
+                    return fetchResult;
+                }
                 if (changeset.IsMergeChangeset)
                 {
                     var parentChangesetId = Tfs.FindMergeChangesetParent(TfsRepositoryPath, changeset.Summary.ChangesetId, this);
