@@ -38,10 +38,11 @@ namespace Sep.Git.Tfs.VsCommon
                 .Select(b => b.Properties.RootItem.Item);
         }
 
-        public override IEnumerable<IBranchObject> GetBranches()
+        public override IEnumerable<IBranchObject> GetBranches(bool getAlsoDeletedBranches = false)
         {
-            var branches = VersionControl.QueryRootBranchObjects(RecursionType.Full)
-                .Where(b => b.Properties.RootItem.IsDeleted == false);
+            var branches = VersionControl.QueryRootBranchObjects(RecursionType.Full).ToList();
+            if (!getAlsoDeletedBranches)
+                branches = branches.Where(b => !b.Properties.RootItem.IsDeleted).ToList();
             return _bridge.Wrap<WrapperForBranchObject, BranchObject>(branches);
         }
 
