@@ -809,6 +809,9 @@ namespace Sep.Git.Tfs.Core
                 throw new GitTfsException("error: The Git branch name '" + gitBranchName + "' is not valid...\n");
             Trace.WriteLine("Git local branch will be :" + gitBranchName);
 
+            if (Repository.HasRemote(gitBranchName))
+                return Repository.ReadTfsRemote(gitBranchName);
+
             Trace.WriteLine("Try creating remote...");
             var tfsRemote = Repository.CreateTfsRemote(new RemoteInfo
             {
