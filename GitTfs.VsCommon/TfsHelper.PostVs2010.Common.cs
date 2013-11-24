@@ -157,11 +157,6 @@ namespace Sep.Git.Tfs.VsCommon
             merges = (merges ?? new ExtendedMerge[] {}).ToArray();
             var merge = merges.LastOrDefault(m => m.SourceItem.Item.ServerItem.Equals(tfsPathParentBranch, StringComparison.InvariantCultureIgnoreCase)
                 && !m.TargetItem.Item.Equals(tfsPathParentBranch, StringComparison.InvariantCultureIgnoreCase));
-            if (merge == null)
-            {
-                Trace.WriteLine("Took last merge found because no one satisfying conditions!");
-                merge = merges.LastOrDefault();
-            }
 
             if (merge == null)
             {
