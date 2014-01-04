@@ -160,7 +160,9 @@ namespace Sep.Git.Tfs.VsCommon
 
             if (merge == null)
             {
-                throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find root changeset for " + tfsPathBranchToCreate + " branch in " + tfsPathParentBranch + " branch");
+                merge = merges.LastOrDefault(m=>m.SourceItem.ChangeType.HasFlag(ChangeType.Rename));
+                if (merge == null)
+                    throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find root changeset for " + tfsPathBranchToCreate + " branch in " + tfsPathParentBranch + " branch");
             }
 
             var changes = "Merge changetype:";
