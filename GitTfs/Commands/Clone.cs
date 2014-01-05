@@ -95,6 +95,8 @@ namespace Sep.Git.Tfs.Commands
             if (withBranches && initBranch != null)
             {
                 initBranch.CloneAllBranches = true;
+                globals.Repository.SetConfig(GitTfsConstants.AutoInitBranches, true.ToString());
+
                 retVal = initBranch.Run();
             }
             if (!init.IsBare) globals.Repository.CommandNoisy("merge", globals.Repository.ReadTfsRemote(globals.RemoteId).RemoteRef);
