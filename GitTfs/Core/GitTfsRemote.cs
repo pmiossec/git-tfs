@@ -466,16 +466,22 @@ namespace Sep.Git.Tfs.Core
             var remote = Repository.ReadAllTfsRemotes().FirstOrDefault(r => parentChangeset.Changes.Any(c => r.GetPathInGitRepo(c.Item.ServerItem) != null));
             if (remote != null)
                 return new List<IGitTfsRemote>(){remote};
-            var tfsPath = Tfs.GetBranches(true).Select(b=>b.Path).SingleOrDefault(b =>
-                parentChangeset.Changes.First().Item.ServerItem.StartsWith(b.EndsWith("/") ? b : b + "/"));
+            var tfsBranch = Tfs.GetBranches(true).SingleOrDefault(b =>
+                parentChangeset.Changes.First().Item.ServerItem.StartsWith(b.Path.EndsWith("/") ? b.Path : b.Path + "/"));
 
-            if (tfsPath == null)
+            if (tfsBranch == null)
             {
                 stdout.WriteLine("error: branch not found. Verify that all the folders have been converted to branches (or something else :().");
                 return new List<IGitTfsRemote>();
             }
 
-            var branchesDatas = Tfs.GetRootChangesetForBranch(tfsPath);
+            if (tfsBranch.IsRoot)
+            {
+                remote = InitTfsBranch(this.remoteOptions, tfsBranch.Path);
+                return new List<IGitTfsRemote>() {remote};
+            }
+
+            var branchesDatas = Tfs.GetRootChangesetForBranch(tfsBranch.Path);
 
             if(branchesDatas.Count > 1)
                 throw new NotImplementedException("TODO: Manage renamed branch by integrating IniTBranch.InitBranchSupportingRename() here");
@@ -487,7 +493,7 @@ namespace Sep.Git.Tfs.Core
                 return null;
             }
 
-            remote = InitBranch(this.remoteOptions, tfsPath, sha1RootCommit);
+            remote = InitBranch(this.remoteOptions, tfsBranch.Path, sha1RootCommit);
 
             return new List<IGitTfsRemote>(){remote};
         }
@@ -893,6 +899,11 @@ namespace Sep.Git.Tfs.Core
 
         public IGitTfsRemote InitBranch(RemoteOptions remoteOptions, string tfsRepositoryPath, string sha1RootCommit, string gitBranchNameExpected = null)
         {
+            return InitTfsBranch(remoteOptions, tfsRepositoryPath, sha1RootCommit, gitBranchNameExpected);
+        }
+
+        private IGitTfsRemote InitTfsBranch(RemoteOptions remoteOptions, string tfsRepositoryPath, string sha1RootCommit = null, string gitBranchNameExpected = null)
+        {
             Trace.WriteLine("Begin process of creating branch for remote :" + tfsRepositoryPath);
             // TFS string representations of repository paths do not end in trailing slashes
             tfsRepositoryPath = (tfsRepositoryPath ?? string.Empty).TrimEnd('/');
@@ -917,8 +928,11 @@ namespace Sep.Git.Tfs.Core
                 Repository = tfsRepositoryPath,
                 RemoteOptions = remoteOptions
             }, System.String.Empty);
-            if (!Repository.CreateBranch(tfsRemote.RemoteRef, sha1RootCommit))
-                throw new GitTfsException("error: Fail to create remote branch ref file!");
+            if (sha1RootCommit != null)
+            {
+                if (!Repository.CreateBranch(tfsRemote.RemoteRef, sha1RootCommit))
+                    throw new GitTfsException("error: Fail to create remote branch ref file!");
+            }
             Trace.WriteLine("Remote created!");
             return tfsRemote;
         }
