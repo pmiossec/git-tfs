@@ -346,8 +346,8 @@ namespace Sep.Git.Tfs.Core
                             fetchResult.LastFetchedChangesetId = MaxChangesetId;
                             return fetchResult;
                         }
-                        var ToDoSupportBranches = true;
-                        if (ToDoSupportBranches)
+
+                        if (Repository.GetConfig(GitTfsConstants.AutoInitBranches) == true.ToString())
                         {
                             if (!Tfs.CanGetBranchInformation)
                                 throw new GitTfsException("TODO :This version of TFS can't manage branches");
