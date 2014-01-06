@@ -257,7 +257,7 @@ namespace Sep.Git.Tfs.Commands
                             {
                                 var lastFetchedChangesetId = tfsBranch.TfsRemote.MaxChangesetId;
                                 Trace.WriteLine("Fetching remote :" + tfsBranch.TfsRemote.Id);
-                                var fetchResult = FetchRemote(tfsBranch.TfsRemote, true);
+                                var fetchResult = FetchRemote(tfsBranch.TfsRemote, true, false);
                                 tfsBranch.IsEntirelyFetched = fetchResult.IsSuccess;
                                 if ( fetchResult.NewChangesetCount != 0)
                                     isSomethingDone = true;
