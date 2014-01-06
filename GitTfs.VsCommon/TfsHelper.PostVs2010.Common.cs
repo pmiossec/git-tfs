@@ -161,7 +161,8 @@ namespace Sep.Git.Tfs.VsCommon
 
             if (merge == null)
             {
-                merge = merges.LastOrDefault(m=>m.SourceItem.ChangeType.HasFlag(ChangeType.Rename));
+                merge = merges.LastOrDefault(m=>m.SourceItem.ChangeType.HasFlag(ChangeType.Rename)
+                    || m.SourceItem.ChangeType.HasFlag(ChangeType.SourceRename));
                 if (merge == null)
                     throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find root changeset for " + tfsPathBranchToCreate + " branch in " + tfsPathParentBranch + " branch");
             }
@@ -185,7 +186,8 @@ namespace Sep.Git.Tfs.VsCommon
             if (merge.TargetItem.Item != null)
                 Trace.WriteLine("Merge TargetItem:" + merge.TargetItem.Item);
 
-            if (merge.SourceItem.ChangeType.HasFlag(ChangeType.Rename))
+            if (merge.SourceItem.ChangeType.HasFlag(ChangeType.Rename)
+                || merge.SourceItem.ChangeType.HasFlag(ChangeType.SourceRename))
                 renameFromBranch = merge.TargetItem.Item;
 
             if (merge.SourceItem.ChangeType.HasFlag(ChangeType.Branch)
