@@ -882,17 +882,7 @@ namespace Sep.Git.Tfs.Core
 
         private string ExtractGitBranchNameFromTfsRepositoryPath(string tfsRepositoryPath)
         {
-            string gitBranchNameExpected;
-            if (tfsRepositoryPath.IndexOf("$/") == 0)
-            {
-                gitBranchNameExpected = tfsRepositoryPath.Remove(0, tfsRepositoryPath.IndexOf('/', 2) + 1);
-            }
-            else
-            {
-                gitBranchNameExpected = tfsRepositoryPath;
-            }
-            gitBranchNameExpected = gitBranchNameExpected.ToGitRefName();
-            var gitBranchName = Repository.AssertValidBranchName(gitBranchNameExpected);
+            var gitBranchName = Repository.AssertValidBranchName(tfsRepositoryPath.ToGitBranchNameFromTfsRepositoryPath());
             stdout.WriteLine("The name of the local branch will be : " + gitBranchName);
             return gitBranchName;
         }

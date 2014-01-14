@@ -435,43 +435,5 @@ namespace Sep.Git.Tfs.Test.Commands
             gitRepository.VerifyAllExpectations();
         }
         #endregion
-
-        #region
-        [Fact]
-        public void ShouldHaveGoodName()
-        {
-           Globals globals = new Globals();
-           globals.Repository = mocks.Get<IGitRepository>();
-           globals.Repository.Stub(t => t.AssertValidBranchName("")).IgnoreArguments().Do ( (Func<string, string>) delegate (string value) { return value; });
-
-           var initBranch4test = new InitBranch4Test(new StringWriter(), globals , null, null);
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("test"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te^st"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te~st"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te st"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te:st"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te*st"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te?st"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te[st"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("test/"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("test."));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("$/repo/te:st"));
-           Assert.Equal("test/test2", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("$/repo/te:st/test2"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te..st"));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("test."));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te\\st."));
-           Assert.Equal("test", initBranch4test.ExtractGitBranchNameFromTfsRepositoryPath("te@{st."));
-        }
-
-        public class InitBranch4Test : InitBranch
-        {
-            public InitBranch4Test(TextWriter stdout, Globals globals, Help helper, AuthorsFile authors) : base(stdout, globals, helper, authors) { }
-
-            public string ExtractGitBranchNameFromTfsRepositoryPath(string tfsRepositoryPath)
-            {
-                return base.ExtractGitBranchNameFromTfsRepositoryPath(tfsRepositoryPath);
-            }
-        }
-        #endregion
     }
 }
