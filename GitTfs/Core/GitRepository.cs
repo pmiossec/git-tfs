@@ -364,6 +364,18 @@ namespace Sep.Git.Tfs.Core
             return entries;
         }
 
+        public IGitTreeBuilder GetTreeBuilder(string commit)
+        {
+            if (commit == null)
+            {
+                return new GitTreeBuilder(_repository.ObjectDatabase);
+            }
+            else
+            {
+                return new GitTreeBuilder(_repository.ObjectDatabase, _repository.Lookup<Commit>(commit).Tree);
+            }
+        }
+
         public Dictionary<string, GitObject> GetObjects()
         {
             return new Dictionary<string, GitObject>(StringComparer.InvariantCultureIgnoreCase);
@@ -405,9 +417,9 @@ namespace Sep.Git.Tfs.Core
                     var path = item.Path.Replace('\\', '/');
                     entries[path] = new GitObject
                     {
-                        Mode = item.Mode.ToModeString(),
+                        Mode = item.Mode,
                         Sha = item.Target.Sha,
-                        ObjectType = item.TargetType.ToString().ToLower(),
+                        ObjectType = item.TargetType,
                         Path = path,
                         Commit = commit
                     };
@@ -459,15 +471,6 @@ namespace Sep.Git.Tfs.Core
                         stream.CopyTo(outstream);
         }
 
-        public string HashAndInsertObject(string filename)
-        {
-            if (_repository.Info.IsBare)
-            {
-                filename = Path.GetFullPath(filename);
-            }
-            return _repository.ObjectDatabase.CreateBlob(filename).Id.Sha;
-        }
-
         public string AssertValidBranchName(string gitBranchName)
         {
             if (!_repository.Refs.IsValidName(ShortToLocalName(gitBranchName)))
@@ -492,18 +495,25 @@ namespace Sep.Git.Tfs.Core
         public string FindCommitHashByChangesetId(long changesetId)
         {
             Trace.WriteLine("Looking for changeset " + changesetId + " in git repository...");
-            
+
             var patternToFind = "git-tfs-id: .*;C" + changesetId + "[^0-9]";
             var regex = new Regex(patternToFind);
-            foreach (var branch in _repository.Branches.Where(p => p.IsRemote).ToList())
+
+            var reachableFromRemoteBranches = new CommitFilter
             {
-                var commit = branch.Commits.FirstOrDefault(c => regex.IsMatch(c.Message));
-                if (commit != null)
-                {
-                    Trace.WriteLine(" => Commit found! hash: " + commit.Sha);
-                    return commit.Sha;
-                }
+                Since = _repository.Branches.Where(p => p.IsRemote),
+                SortBy = CommitSortStrategies.None
+            };
+
+            var commitsFromRemoteBranches = _repository.Commits.QueryBy(reachableFromRemoteBranches);
+
+            var commit = commitsFromRemoteBranches.FirstOrDefault(c => regex.IsMatch(c.Message));
+            if (commit != null)
+            {
+                Trace.WriteLine(" => Commit found! hash: " + commit.Sha);
+                return commit.Sha;
             }
+
             Trace.WriteLine(" => Commit not found!");
             return null;
         }
