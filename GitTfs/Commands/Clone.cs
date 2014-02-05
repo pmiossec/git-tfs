@@ -57,12 +57,16 @@ namespace Sep.Git.Tfs.Commands
             // TFS string representations of repository paths do not end in trailing slashes
             tfsRepositoryPath = (tfsRepositoryPath ?? string.Empty).TrimEnd('/');
 
+
             int retVal;
             try
             {
                 retVal = init.Run(tfsUrl, tfsRepositoryPath, gitRepositoryPath);
 
                 VerifyTfsPathToClone(tfsRepositoryPath);
+
+                if (withBranches && initBranch != null)
+                    fetch.IgnoreBranches = false;
 
                 if (retVal == 0) fetch.Run(withBranches);
             }
@@ -95,7 +99,6 @@ namespace Sep.Git.Tfs.Commands
             if (withBranches && initBranch != null)
             {
                 initBranch.CloneAllBranches = true;
-                globals.Repository.SetConfig(GitTfsConstants.AutoInitBranches, true.ToString());
 
                 retVal = initBranch.Run();
             }

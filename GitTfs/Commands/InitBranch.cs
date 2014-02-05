@@ -188,7 +188,7 @@ namespace Sep.Git.Tfs.Commands
                 return GitTfsExitCodes.Help;
             }
 
-            _globals.Repository.SetConfig(GitTfsConstants.AutoInitBranches, true.ToString());
+            _globals.Repository.SetConfig(GitTfsConstants.IgnoreBranches, false.ToString());
 
             var defaultRemote = InitFromDefaultRemote();
 

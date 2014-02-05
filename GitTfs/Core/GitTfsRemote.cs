@@ -329,36 +329,39 @@ namespace Sep.Git.Tfs.Core
                 }
                 if (changeset.IsMergeChangeset)
                 {
-                    var parentChangesetId = Tfs.FindMergeChangesetParent(TfsRepositoryPath, changeset.Summary.ChangesetId, this);
-                    var shaParent = Repository.FindCommitHashByChangesetId(parentChangesetId);
-                    if (shaParent == null)
-                        shaParent = FindMergedRemoteAndFetch(parentChangesetId, stopOnFailMergeCommit);
-                    if (shaParent != null)
+                    if (!Tfs.CanGetBranchInformation)
                     {
-                        log.CommitParents.Add(shaParent);
+                        stdout.WriteLine("info: this changeset " + changeset.Summary.ChangesetId +
+                                         " is a merge changeset. But was not treated as is because this version of TFS can't manage branches...");
                     }
-                    else
+                    else if (Repository.GetConfig(GitTfsConstants.IgnoreBranches) != true.ToString())
                     {
-                        if (stopOnFailMergeCommit)
+                        var parentChangesetId = Tfs.FindMergeChangesetParent(TfsRepositoryPath, changeset.Summary.ChangesetId, this);
+                        var shaParent = Repository.FindCommitHashByChangesetId(parentChangesetId);
+                        if (shaParent == null)
+                            shaParent = FindMergedRemoteAndFetch(parentChangesetId, stopOnFailMergeCommit);
+                        if (shaParent != null)
                         {
-                            fetchResult.IsSuccess = false;
-                            fetchResult.LastFetchedChangesetId = MaxChangesetId;
-                            return fetchResult;
-                        }
-
-                        if (Repository.GetConfig(GitTfsConstants.AutoInitBranches) == true.ToString())
-                        {
-                            if (!Tfs.CanGetBranchInformation)
-                                throw new GitTfsException("TODO :This version of TFS can't manage branches");
-                            Repository.FindCommitHashByChangesetId(-1);
+                            log.CommitParents.Add(shaParent);
                         }
                         else
                         {
-                            //TODO : Manage case where there is not yet a git commit for the parent changset!!!!!
+                            if (stopOnFailMergeCommit)
+                            {
+                                fetchResult.IsSuccess = false;
+                                fetchResult.LastFetchedChangesetId = MaxChangesetId;
+                                return fetchResult;
+                            }
+
                             stdout.WriteLine("warning: this changeset " + changeset.Summary.ChangesetId +
-                            " is a merge changeset. But it can't have been managed accordingly because one of the parent changeset "
-                            + parentChangesetId + " is not present in the repository! If you want to do it, fetch the branch containing this changeset before retrying...");
+                                             " is a merge changeset. But git-tfs failed to find and fetch the parent changeset "
+                                             + parentChangesetId + ". Parent changeset will be ignored...");
                         }
+                    }
+                    else
+                    {
+                        stdout.WriteLine("info: this changeset " + changeset.Summary.ChangesetId +
+                                         " is a merge changeset. But was not treated as is because of your git setting...");
                     }
                 }
                 if (changeset.Summary.ChangesetId == mergeChangesetId)
