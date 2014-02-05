@@ -37,6 +37,7 @@ namespace Sep.Git.Tfs.Commands
         bool ForceFetch { get; set; }
         bool ExportMetadatas { get; set; }
         string ExportMetadatasFile { get; set; }
+        public bool IgnoreBranches { get; set; }
 
         public virtual OptionSet OptionSet
         {
@@ -58,6 +59,8 @@ namespace Sep.Git.Tfs.Commands
                         v => ExportMetadatas = v != null },
                     { "export-work-item-mapping=", "Path to Work-items mapping export file",
                         v => ExportMetadatasFile = v },
+                    { "ignore-branches", "Ignore fetching merged branches when encounter merge changesets",
+                        v => IgnoreBranches = v != null },
                 }.Merge(remoteOptions.OptionSet);
             }
         }
@@ -79,6 +82,9 @@ namespace Sep.Git.Tfs.Commands
 
         private int Run(bool stopOnFailMergeCommit, params string[] args)
         {
+            if (!FetchAll && IgnoreBranches)
+                globals.Repository.SetConfig(GitTfsConstants.IgnoreBranches, true.ToString());
+
             foreach (var remote in GetRemotesToFetch(args))
             {
                 FetchRemote(stopOnFailMergeCommit, remote);
