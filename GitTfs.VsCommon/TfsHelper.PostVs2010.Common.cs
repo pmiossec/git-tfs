@@ -72,8 +72,7 @@ namespace Sep.Git.Tfs.VsCommon
                     Trace.WriteLine("Parameter about parent branch will be ignored because this version of TFS is able to find the parent!");
 
                 Trace.WriteLine("Looking to find branch '" + tfsPathBranchToCreate + "' in all TFS branches...");
-                var allTfsBranches = VersionControl.QueryRootBranchObjects(RecursionType.Full);
-                var tfsBranchToCreate = allTfsBranches.FirstOrDefault(b => b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
+                var tfsBranchToCreate = AllTfsBranches.FirstOrDefault(b => b.Properties.RootItem.Item.ToLower() == tfsPathBranchToCreate.ToLower());
                 if (tfsBranchToCreate == null)
                 {
                     throw new GitTfsException("error: TFS branches "+ tfsPathBranchToCreate +" not found!");
@@ -120,6 +119,12 @@ namespace Sep.Git.Tfs.VsCommon
                     AddNewRootBranch(rootBranches, rootBranch);
                 }
             }
+        }
+
+        private BranchObject[] _allTfsBranches;
+        protected BranchObject[] AllTfsBranches
+        {
+            get { return _allTfsBranches ?? (_allTfsBranches = VersionControl.QueryRootBranchObjects(RecursionType.Full)); }
         }
 
         private static void AddNewRootBranch(IList<RootBranch> rootBranches, RootBranch rootBranch)
