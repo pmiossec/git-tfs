@@ -40,10 +40,10 @@ namespace Sep.Git.Tfs.VsCommon
 
         public override IEnumerable<IBranchObject> GetBranches(bool getAlsoDeletedBranches = false)
         {
-            var branches = VersionControl.QueryRootBranchObjects(RecursionType.Full).ToList();
-            if (!getAlsoDeletedBranches)
-                branches = branches.Where(b => !b.Properties.RootItem.IsDeleted).ToList();
-            return _bridge.Wrap<WrapperForBranchObject, BranchObject>(branches);
+            var branches = VersionControl.QueryRootBranchObjects(RecursionType.Full);
+            if (getAlsoDeletedBranches)
+                return _bridge.Wrap<WrapperForBranchObject, BranchObject>(branches);
+            return _bridge.Wrap<WrapperForBranchObject, BranchObject>(branches.Where(b => !b.Properties.RootItem.IsDeleted));
         }
 
         public override IList<RootBranch> GetRootChangesetForBranch(string tfsPathBranchToCreate, string tfsPathParentBranch = null)
