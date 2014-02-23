@@ -132,7 +132,6 @@ namespace Sep.Git.Tfs.Commands
                 Trace.WriteLine("Found commit " + cbd.Sha1RootCommit + " for changeset :" + cbd.RootChangesetId);
 
                 tfsRemote = defaultRemote.InitBranch(_remoteOptions, cbd.TfsRepositoryPath, cbd.Sha1RootCommit, cbd.GitBranchNameExpected);
-                RemoteCreated = tfsRemote;
                 if (rootBranch.IsRenamedBranch || !NoFetch)
                 {
                     fetchResult = FetchRemote(tfsRemote, false, !DontCreateGitBranch && !rootBranch.IsRenamedBranch);
@@ -146,7 +145,7 @@ namespace Sep.Git.Tfs.Commands
             {
                 _globals.Repository.DeleteTfsRemote(gitTfsRemote);
             }
-            return tfsRemote;
+            return RemoteCreated = tfsRemote;
         }
 
         class BranchCreationDatas
