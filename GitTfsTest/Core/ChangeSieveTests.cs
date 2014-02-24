@@ -128,6 +128,11 @@ namespace Sep.Git.Tfs.Test.Core
                 return new FakeChange(TfsChangeType.Add, TfsItemType.Folder, serverItem);
             }
 
+            public static IChange DeleteDir(string serverItem)
+            {
+                return new FakeChange(TfsChangeType.Delete, TfsItemType.Folder, serverItem);
+            }
+
             const int ChangesetId = 10;
 
             TfsChangeType _tfsChangeType;
@@ -463,6 +468,31 @@ namespace Sep.Git.Tfs.Test.Core
                 Assert.Equal("100644", toApply[1].Mode.ToModeString()); // new file
                 Assert.Equal("100755", toApply[2].Mode.ToModeString()); // existing executable file
                 Assert.Equal("100644", toApply[3].Mode.ToModeString()); // existing normal file
+            }
+        }
+
+
+        public class WithDeleteMainFolderBranchAndSubItems : Base<WithDeleteMainFolderBranchAndSubItems.Fixture>
+        {
+            public class Fixture : BaseFixture
+            {
+                public Fixture()
+                {
+                    Changeset.Changes = new IChange[] {
+                        FakeChange.Delete("$/Project/file1.txt"),
+                        FakeChange.Delete("$/Project/file2.txt"),
+                        FakeChange.Delete("$/Project/file3.txt"),
+                        FakeChange.DeleteDir("$/Project/"),
+                        FakeChange.Delete("$/Project/file4.txt"),
+                        FakeChange.Delete("$/Project/file5.txt"),
+                    };
+                }
+            }
+
+            [Fact]
+            public void WhenMainBranchFolderIsDeleted_ThenKeepFileInGitCommitByDoingNothing()
+            {
+                Assert.Equal(0, Subject.GetChangesToApply().Count());
             }
         }
     }
