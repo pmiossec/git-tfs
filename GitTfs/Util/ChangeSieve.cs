@@ -45,22 +45,22 @@ namespace Sep.Git.Tfs.Util
 
         public IEnumerable<IChange> GetChangesToFetch()
         {
+            if (DeletesProject)
+                return Enumerable.Empty<IChange>();
             return NamedChanges.Where(c => Include(c.GitPath)).Select(c => c.Change);
         }
 
         public IEnumerable<ApplicableChange> GetChangesToApply()
         {
+            if (DeletesProject)
+                return Enumerable.Empty<ApplicableChange>();
+
             var compartments = new {
                 Deleted = new List<ApplicableChange>(),
                 Updated = new List<ApplicableChange>(),
             };
             foreach (var change in NamedChanges)
             {
-                if (change.Change.Item.ItemType == TfsItemType.Folder
-                   && change.GitPath == string.Empty
-                   && change.Change.ChangeType.IncludesOneOf(TfsChangeType.Delete))
-                    return new List<ApplicableChange>();
-
                 if (change.Change.Item.ItemType == TfsItemType.File)
                 {
                     if (change.Change.ChangeType.IncludesOneOf(TfsChangeType.Delete))
@@ -84,6 +84,23 @@ namespace Sep.Git.Tfs.Util
                 }
             }
             return compartments.Deleted.Concat(compartments.Updated);
+        }
+
+        bool? _deletesProject;
+        private bool DeletesProject
+        {
+            get
+            {
+                if (!_deletesProject.HasValue)
+                {
+                    _deletesProject =
+                        NamedChanges.Any(change =>
+                            change.Change.Item.ItemType == TfsItemType.Folder
+                               && change.GitPath == string.Empty
+                               && change.Change.ChangeType.IncludesOneOf(TfsChangeType.Delete));
+                }
+                return _deletesProject.Value;
+            }
         }
 
         class NamedChange
