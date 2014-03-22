@@ -264,13 +264,24 @@ namespace Sep.Git.Tfs.Core
             return isInDotGit.IsMatch(path);
         }
 
-        public string GetPathInGitRepo(string tfsPath)
+        public bool FindChangeSetInGitRepo(IChangeset changeset)
+        {
+            //if the item type is a file add a slash at the end of the repo path
+            return changeset.Changes.Any(x => GetPathInGitRepo(x.Item.ServerItem, x.Item.ItemType==TfsItemType.File) != null);
+        }
+
+        public string GetPathInGitRepo(string tfsPath, bool addSlashAfterTfsRepositoryPath = false)
         {
             if (tfsPath == null) return null;
 
             if (!IsSubtreeOwner)
             {
-                if (!tfsPath.StartsWith(TfsRepositoryPath, StringComparison.InvariantCultureIgnoreCase)) return null;
+                var repoPath = TfsRepositoryPath;
+                //why do this? when we have two branches, one named 2.1 and one named 2.1.1 2.1 will show up as a match
+                if (addSlashAfterTfsRepositoryPath)
+                    repoPath += "/";
+                if (!tfsPath.StartsWith(repoPath, StringComparison.InvariantCultureIgnoreCase)) 
+                    return null;
                 tfsPath = tfsPath.Substring(TfsRepositoryPath.Length);
 
             }
@@ -460,7 +471,8 @@ namespace Sep.Git.Tfs.Core
         {
             //I think you want something that uses GetPathInGitRepo and ShouldSkip. See TfsChangeset.Apply.
             //Don't know if there is a way to extract remote tfs repository path from changeset datas! Should be better!!!
-            return Repository.ReadAllTfsRemotes().Where(r => changeset.Changes.Any(c => r.GetPathInGitRepo(c.Item.ServerItem) != null));
+            var remote = Repository.ReadAllTfsRemotes().FirstOrDefault(r => FindChangeSetInGitRepo(parentChangeset));
+//            var remote = Repository.ReadAllTfsRemotes().FirstOrDefault(r => parentChangeset.Changes.Any(c => r.GetPathInGitRepo(c.Item.ServerItem) != null));
         }
 
         private string CommitChangeset(ITfsChangeset changeset, string parent)
