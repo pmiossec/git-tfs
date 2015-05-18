@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Security;
 using Microsoft.TeamFoundation;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.Server;
@@ -53,7 +54,21 @@ namespace Sep.Git.Tfs.VsCommon
 
         public string Username { get; set; }
 
-        public string Password { get; set; }
+        private SecureString _password;
+        public string Password
+        {
+            get { return _password.ToString(); }
+            set
+            {
+                var secureString = new SecureString();
+                if (value.Length > 0)
+                {
+                    foreach (var c in value.ToCharArray()) secureString.AppendChar(c);
+                }
+                secureString.MakeReadOnly();
+                _password = secureString;
+            }
+        }
 
         public bool HasCredentials
         {
