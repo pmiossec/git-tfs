@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using NDesk.Options;
 using Sep.Git.Tfs.Core;
 using StructureMap;
@@ -43,10 +44,15 @@ namespace Sep.Git.Tfs.Commands
             long changesetId;
             if(!long.TryParse(id, out changesetId))
                 throw new GitTfsException("error: wrong format for changeset id...");
-            //TODO
-            var sha = _globals.Repository.FindCommitHashByChangesetId(changesetId, "TODO");
-            if (string.IsNullOrEmpty(sha))
-                throw new GitTfsException("error: commit not found for this changeset id...");
+
+            var shas = _globals.Repository.FindCommitHashesByChangesetId(changesetId);
+            if (shas.Count == 0)
+                throw new GitTfsException("error: commit not found for " + changesetId.ToString() + " changeset id...");
+            if (shas.Count > 1)
+                throw new GitTfsException("error: found more than one commit for " + changesetId.ToString() + " changeset id...");
+
+            var sha = shas.Single();
+
             if (ReturnShaOnly)
             {
                 _stdout.Write(sha);
