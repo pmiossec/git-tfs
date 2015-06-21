@@ -349,7 +349,7 @@ namespace Sep.Git.Tfs.Core
 
         public TfsChangesetInfo GetTfsChangesetById(string remoteRef, long changesetId, string tfsPath)
         {
-            var commit = FindCommitsByChangesetId(changesetId, remoteRef).FirstOrDefault(c => c.Message.Contains(tfsPath));
+            var commit = FindCommitsByChangesetId(changesetId, tfsPath, remoteRef).FirstOrDefault();
             if (commit == null)
                 return null;
             return TryParseChangesetInfo(commit.Message, commit.Sha);
@@ -533,7 +533,7 @@ namespace Sep.Git.Tfs.Core
 
         public string FindCommitHashByChangesetId(long changesetId, string tfsPath)
         {
-            var commit = FindCommitsByChangesetId(changesetId).FirstOrDefault(c => c.Message.Contains(tfsPath));
+            var commit = FindCommitsByChangesetId(changesetId, tfsPath).FirstOrDefault();
             if (commit == null)
                 return null;
 
@@ -560,8 +560,9 @@ namespace Sep.Git.Tfs.Core
             return false;
         }
 
-        private IEnumerable<Commit> FindCommitsByChangesetId(long changesetId, string remoteRef = null)
+        private IEnumerable<Commit> FindCommitsByChangesetId(long changesetId, string tfsPath = null, string remoteRef = null)
         {
+            //Pour le moment, si tfsPath = null => le cache ne sert à rien car utilisé que dans la commande "Checkout" qui est du one shot!
             Trace.WriteLine("Looking for changeset " + changesetId.ToString() + " in git repository...");
 
             if (remoteRef == null)
@@ -592,6 +593,8 @@ namespace Sep.Git.Tfs.Core
                 {
                     AddToChangesetCache(changesetId, c.Sha);
 
+                    //Quand le changeset est trouvé, continuer jusqu'au prochain qui n'a pas ce n° de changeset
+                    //avant de faire une return pour avoir TOUS les commits ayant ce changesetId...
                     if (id == changesetId)
                         commits.Add(c);
                 }
