@@ -545,17 +545,19 @@ namespace Sep.Git.Tfs.Core
             return FindCommitsByChangesetId(changesetId).Select(x => x.Sha).ToList();
         }
 
-        private static readonly Regex tfsIdRegex = new Regex("^git-tfs-id: .*;C([0-9]+)\r?$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.RightToLeft);
+        private static readonly Regex tfsIdRegex = new Regex(@"^git-tfs-id: \[.*\](.*);C([0-9]+)\r?$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.RightToLeft);
 
-        public static bool TryParseChangesetId(string commitMessage, out long changesetId)
+        public static bool TryParseChangesetId(string commitMessage, out long changesetId, out string tfsPath)
         {
             var match = tfsIdRegex.Match(commitMessage);
             if (match.Success)
             {
-                changesetId = long.Parse(match.Groups[1].Value);
+                tfsPath = match.Groups[1].Value;
+                changesetId = long.Parse(match.Groups[2].Value);
                 return true;
             }
 
+            tfsPath = null;
             changesetId = 0;
             return false;
         }
@@ -586,17 +588,35 @@ namespace Sep.Git.Tfs.Core
             var commitsFromRemoteBranches = _repository.Commits.QueryBy(reachableFromRemoteBranches);
 
             var commits = new List<Commit>();
+            bool commitsFound = false;
+
             foreach (var c in commitsFromRemoteBranches)
             {
                 long id;
-                if (TryParseChangesetId(c.Message, out id))
+                string path;
+                if (TryParseChangesetId(c.Message, out id, out path))
                 {
+                    if (commitsFound && id != changesetId)
+                        return commits;
                     AddToChangesetCache(changesetId, c.Sha);
 
                     //Quand le changeset est trouvé, continuer jusqu'au prochain qui n'a pas ce n° de changeset
                     //avant de faire une return pour avoir TOUS les commits ayant ce changesetId...
                     if (id == changesetId)
-                        commits.Add(c);
+                    {
+                        if (tfsPath != null)
+                        {
+                            if (tfsPath == path)
+                            {
+                                commitsFound = true;
+                                commits.Add(c);
+                            }
+                        }
+                        else
+                        {
+                            commits.Add(c);
+                        }
+                    }
                 }
             }
 
