@@ -45,13 +45,15 @@ namespace Sep.Git.Tfs.Commands
             if(!long.TryParse(id, out changesetId))
                 throw new GitTfsException("error: wrong format for changeset id...");
 
-            var shas = _globals.Repository.FindCommitHashesByChangesetId(changesetId);
-            if (shas.Count == 0)
-                throw new GitTfsException("error: commit not found for " + changesetId.ToString() + " changeset id...");
-            if (shas.Count > 1)
-                throw new GitTfsException("error: found more than one commit for " + changesetId.ToString() + " changeset id...");
+            var commits = _globals.Repository.FindCommitHashesByChangesetId(changesetId);
+            if (commits.Count == 0)
+                throw new GitTfsException("error: commit not found for the changeset " + changesetId + "...");
+            if (commits.Count > 1)
+                throw new GitTfsException("error: found more than one commit for  the changeset " + changesetId + "..."
+                                          + Environment.NewLine + "Please specify the whished tfs path:"
+                                           +Environment.NewLine + "\n * " + string.Join("\n * ", commits.Select( c=>c.TfsPath)));
 
-            var sha = shas.Single();
+            var sha = commits.Single().Sha;
 
             if (ReturnShaOnly)
             {

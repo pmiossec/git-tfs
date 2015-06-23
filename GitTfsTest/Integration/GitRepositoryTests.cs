@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Sep.Git.Tfs.Core;
 using Sep.Git.Tfs.Core.TfsInterop;
 using StructureMap;
@@ -200,5 +202,60 @@ namespace Sep.Git.Tfs.Test.Integration
                 Assert.Equal(0, changesets.Count());
             }
         }
+
+        //[Fact]
+        //public void FindChangesetWithTheSameIdOn2branches()
+        //{
+        //    //History of changesets:
+        //    //6
+        //    //|\
+        //    //| 5
+        //    //| |
+        //    //3 3bis
+        //    //| /
+        //    //2
+        //    //|
+        //    //1
+
+        //    string c1 = null;
+        //    string c2 = null;
+        //    string c3 = null;
+        //    string c3bis = null;
+        //    string c4 = null;
+        //    string c5 = null;
+        //    h.SetupGitRepo("repo", g =>
+        //    {
+        //        c1 = g.Commit("C1-Common\n\ngit-tfs-id: [https://tfs.server/tfs]$/trunk;C1");
+        //        c2 = g.Commit("C2-Common\n\ngit-tfs-id: [https://tfs.server/tfs]$/trunk;C2");
+        //        g.CreateBranch("branch");
+        //        c3bis = g.Commit("C3bis-branch\n\ngit-tfs-id: [https://tfs.server/tfs]$/branch;C3");
+        //        g.Checkout("master");
+        //        c3 = g.Commit("C3-master\n\ngit-tfs-id: [https://tfs.server/tfs]$/trunk;C3");
+        //        g.Checkout("branch");
+        //        c4 = g.Commit("C4-branch\n\ngit-tfs-id: [https://tfs.server/tfs]$/branch;C4");
+        //        g.Checkout("master");
+        //        g.Merge("branch");
+        //        //Trick to create a merge commit similar to one fetched from TFS
+        //        c5 = g.Amend("C5-master (merge branch into)\n\ngit-tfs-id: [https://tfs.server/tfs]$/trunk;C5");
+        //    });
+
+
+        //    using (var repo = h.Repository("repo"))
+        //    {
+        //        var gitRepository = new GitRepository(new StringWriter(), repo.Info.WorkingDirectory, new Container(), null, new RemoteConfigConverter());
+
+        //        //var shas = gitRepository.FindCommitsByChangesetId(3, null, null).Select(c => c.Sha);
+        //        //Assert.Contains(c3, shas);
+        //        //Assert.Contains(c3bis, shas);
+        //        var commit3InBranch = gitRepository.FindCommitsByChangesetId(3, "$/branch", null).First();
+        //        Assert.Equal(c3bis, commit3InBranch.Sha);
+        //        var commit3InTrunk = gitRepository.FindCommitsByChangesetId(3, "$/trunk", null).First();
+        //        Assert.Equal(c3, commit3InTrunk.Sha);
+        //        var shas = gitRepository.FindCommitsByChangesetId(3, null, null).Select(c => c.Sha);
+        //        Assert.Contains(c3, shas);
+        //        Assert.Contains(c3bis, shas);
+        //    }
+        //}
+
     }
 }

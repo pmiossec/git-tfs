@@ -36,7 +36,8 @@ namespace Sep.Git.Tfs.Test.Core
         {
             long id;
             string path;
-            bool parsed = GitRepository.TryParseChangesetId(message, out id, out path);
+            string server;
+            bool parsed = GitCommit.TryParseChangesetId(message, out id, out path, out server);
             Assert.Equal(expectParsed, parsed);
             if (parsed)
             {

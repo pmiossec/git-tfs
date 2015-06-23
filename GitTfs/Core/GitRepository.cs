@@ -44,15 +44,16 @@ namespace Sep.Git.Tfs.Core
                 logEntry.Tree,
                 parents,
                 false);
-            AddToChangesetCache(logEntry.ChangesetId, commit.Sha);
-            return new GitCommit(commit);
+            var gitCommit = new GitCommit(commit);
+            AddToChangesetCache(logEntry.ChangesetId, gitCommit);
+            return gitCommit;
         }
 
-        private void AddToChangesetCache(long changesetId, string sha)
+        private void AddToChangesetCache(long changesetId, GitCommit sha)
         {
-            IList<string> shas;
+            IList<GitCommit> shas;
             if (!changesetsCache.TryGetValue(changesetId, out shas))
-                changesetsCache[changesetId] = shas = new List<string>();
+                changesetsCache[changesetId] = shas = new List<GitCommit>();
             shas.Add(sha);
         }
 
@@ -528,7 +529,7 @@ namespace Sep.Git.Tfs.Core
             return reference != null;
         }
 
-        private readonly Dictionary<long, IList<string>> changesetsCache = new Dictionary<long, IList<string>>();
+        private readonly Dictionary<long, IList<GitCommit>> changesetsCache = new Dictionary<long, IList<GitCommit>>();
         private bool cacheIsFull = false;
 
         public string FindCommitHashByChangesetId(long changesetId, string tfsPath)
@@ -540,41 +541,33 @@ namespace Sep.Git.Tfs.Core
             return commit.Sha;
         }
 
-        public ICollection<string> FindCommitHashesByChangesetId(long changesetId)
+        public ICollection<GitCommit> FindCommitHashesByChangesetId(long changesetId)
         {
-            return FindCommitsByChangesetId(changesetId).Select(x => x.Sha).ToList();
+            return FindCommitsByChangesetId(changesetId).ToList();
         }
 
-        private static readonly Regex tfsIdRegex = new Regex(@"^git-tfs-id: \[.*\](.*);C([0-9]+)\r?$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.RightToLeft);
-
-        public static bool TryParseChangesetId(string commitMessage, out long changesetId, out string tfsPath)
-        {
-            var match = tfsIdRegex.Match(commitMessage);
-            if (match.Success)
-            {
-                tfsPath = match.Groups[1].Value;
-                changesetId = long.Parse(match.Groups[2].Value);
-                return true;
-            }
-
-            tfsPath = null;
-            changesetId = 0;
-            return false;
-        }
-
-        private IEnumerable<Commit> FindCommitsByChangesetId(long changesetId, string tfsPath = null, string remoteRef = null)
+        public IEnumerable<GitCommit> FindCommitsByChangesetId(long changesetId, string tfsPath = null, string remoteRef = null)
         {
             //Pour le moment, si tfsPath = null => le cache ne sert à rien car utilisé que dans la commande "Checkout" qui est du one shot!
             Trace.WriteLine("Looking for changeset " + changesetId.ToString() + " in git repository...");
 
+            IList<GitCommit> commits;
             if (remoteRef == null)
             {
-                IList<string> shas;
-                if (changesetsCache.TryGetValue(changesetId, out shas))
-                    return shas.Select(sha => _repository.Lookup<Commit>(sha));
+                if (changesetsCache.TryGetValue(changesetId, out commits))
+                {
+                    if (tfsPath == null)
+                    {
+                        return commits;
+                    }
+                    else
+                    {
+                        return commits.Where(s => s.TfsPath == tfsPath);
+                    }
+                }
 
                 if (cacheIsFull)
-                    return Enumerable.Empty<Commit>();
+                    return Enumerable.Empty<GitCommit>();
             }
 
             var reachableFromRemoteBranches = new CommitFilter
@@ -585,36 +578,35 @@ namespace Sep.Git.Tfs.Core
 
             if (remoteRef != null)
                 reachableFromRemoteBranches.Since = _repository.Branches.Where(p => p.IsRemote && p.CanonicalName.EndsWith(remoteRef));
-            var commitsFromRemoteBranches = _repository.Commits.QueryBy(reachableFromRemoteBranches);
+            var commitsFromRemoteBranches = _repository.Commits.ToList();//.QueryBy(reachableFromRemoteBranches); FIX!!!!!!!!!!!!!!
 
-            var commits = new List<Commit>();
+            commits = new List<GitCommit>();
             bool commitsFound = false;
 
             foreach (var c in commitsFromRemoteBranches)
             {
-                long id;
-                string path;
-                if (TryParseChangesetId(c.Message, out id, out path))
+                var gitCommit = new GitCommit(c);
+                if (gitCommit.IsTfsChangeset)
                 {
-                    if (commitsFound && id != changesetId)
-                        return commits;
-                    AddToChangesetCache(changesetId, c.Sha);
+                    if (commitsFound && gitCommit.ChangesetId != changesetId)
+                        break;
+                    AddToChangesetCache(gitCommit.ChangesetId, gitCommit);
 
                     //Quand le changeset est trouvé, continuer jusqu'au prochain qui n'a pas ce n° de changeset
                     //avant de faire une return pour avoir TOUS les commits ayant ce changesetId...
-                    if (id == changesetId)
+                    if (gitCommit.ChangesetId == changesetId)
                     {
+                        commitsFound = true;
                         if (tfsPath != null)
                         {
-                            if (tfsPath == path)
+                            if (tfsPath == gitCommit.TfsPath)
                             {
-                                commitsFound = true;
-                                commits.Add(c);
+                                commits.Add(gitCommit);
                             }
                         }
                         else
                         {
-                            commits.Add(c);
+                            commits.Add(gitCommit);
                         }
                     }
                 }
