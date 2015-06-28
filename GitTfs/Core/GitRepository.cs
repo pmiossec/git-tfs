@@ -44,16 +44,17 @@ namespace Sep.Git.Tfs.Core
                 logEntry.Tree,
                 parents,
                 false);
-            AddToChangesetCache(logEntry.ChangesetId, commit.Sha);
-            return new GitCommit(commit);
+            var gitCommit = new GitCommit(commit);
+            AddToChangesetCache(logEntry.ChangesetId, gitCommit);
+            return gitCommit;
         }
 
-        private void AddToChangesetCache(long changesetId, string sha)
+        private void AddToChangesetCache(long changesetId, GitCommit commit)
         {
-            IList<string> shas;
+            IList<GitCommit> shas;
             if (!changesetsCache.TryGetValue(changesetId, out shas))
-                changesetsCache[changesetId] = shas = new List<string>();
-            shas.Add(sha);
+                changesetsCache[changesetId] = shas = new List<GitCommit>();
+            shas.Add(commit);
         }
 
         public void UpdateRef(string gitRefName, string shaCommit, string message = null)
@@ -528,7 +529,7 @@ namespace Sep.Git.Tfs.Core
             return reference != null;
         }
 
-        private readonly Dictionary<long, IList<string>> changesetsCache = new Dictionary<long, IList<string>>();
+        private readonly Dictionary<long, IList<GitCommit>> changesetsCache = new Dictionary<long, IList<GitCommit>>();
         private bool cacheIsFull = false;
 
         public string FindCommitHashByChangesetId(long changesetId, string tfsPath)
@@ -540,9 +541,9 @@ namespace Sep.Git.Tfs.Core
             return commit.Sha;
         }
 
-        public ICollection<string> FindCommitHashesByChangesetId(long changesetId)
+        public ICollection<GitCommit> FindCommitHashesByChangesetId(long changesetId)
         {
-            return FindCommitsByChangesetId(changesetId).Select(x => x.Sha).ToList();
+            return FindCommitsByChangesetId(changesetId).ToList();
         }
 
         private static readonly Regex tfsIdRegex = new Regex("^git-tfs-id: .*;C([0-9]+)\r?$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.RightToLeft);
@@ -560,16 +561,16 @@ namespace Sep.Git.Tfs.Core
             return false;
         }
 
-        private Commit FindCommitByChangesetIdAndPath(long changesetId, string tfsPath, string remoteRef = null)
+        private GitCommit FindCommitByChangesetIdAndPath(long changesetId, string tfsPath, string remoteRef = null)
         {
             Trace.WriteLine("Looking for changeset " + changesetId.ToString() + " in git repository...");
 
             if (remoteRef == null)
             {
-                IList<string> shas;
-                if (changesetsCache.TryGetValue(changesetId, out shas))
+                IList<GitCommit> gitCommits;
+                if (changesetsCache.TryGetValue(changesetId, out gitCommits))
                 {
-                    var commitFromCache = shas.Select(sha => _repository.Lookup<Commit>(sha)).FirstOrDefault(c => c.Message.Contains(tfsPath));
+                    var commitFromCache = gitCommits.FirstOrDefault(c => c.Message.Contains(tfsPath));
                     if (commitFromCache != null)
                         return commitFromCache;
                 }
@@ -589,17 +590,17 @@ namespace Sep.Git.Tfs.Core
 
             var commitsFromRemoteBranches = _repository.Commits.QueryBy(reachableFromRemoteBranches);
 
-            Commit commit = null;
+            GitCommit commit = null;
             foreach (var c in commitsFromRemoteBranches)
             {
-                long id;
-                if (TryParseChangesetId(c.Message, out id))
+                var gitCommit = new GitCommit(c);
+                if (commit.IsTfsChangeset)
                 {
-                    AddToChangesetCache(changesetId, c.Sha);
+                    AddToChangesetCache(gitCommit.ChangesetId, gitCommit);
 
-                    if (id == changesetId && c.Message.Contains(tfsPath))
+                    if (gitCommit.ChangesetId == changesetId && gitCommit.TfsPath == tfsPath)
                     {
-                        commit = c;
+                        commit = gitCommit;
                         break;
                     }
                 }
@@ -616,18 +617,18 @@ namespace Sep.Git.Tfs.Core
             return commit;
         }
 
-        private IEnumerable<Commit> FindCommitsByChangesetId(long changesetId, string remoteRef = null)
+        private IEnumerable<GitCommit> FindCommitsByChangesetId(long changesetId, string remoteRef = null)
         {
             Trace.WriteLine("Looking for changeset " + changesetId.ToString() + " in git repository...");
 
             if (remoteRef == null)
             {
-                IList<string> shas;
-                if (changesetsCache.TryGetValue(changesetId, out shas))
-                    return shas.Select(sha => _repository.Lookup<Commit>(sha));
+                IList<GitCommit> gitCommits;
+                if (changesetsCache.TryGetValue(changesetId, out gitCommits))
+                    return gitCommits;
 
                 if (cacheIsFull)
-                    return Enumerable.Empty<Commit>();
+                    return Enumerable.Empty<GitCommit>();
             }
 
             var reachableFromRemoteBranches = new CommitFilter
@@ -640,16 +641,17 @@ namespace Sep.Git.Tfs.Core
                 reachableFromRemoteBranches.Since = _repository.Branches.Where(p => p.IsRemote && p.CanonicalName.EndsWith(remoteRef));
             var commitsFromRemoteBranches = _repository.Commits.QueryBy(reachableFromRemoteBranches);
 
-            var commits = new List<Commit>();
+            var commits = new List<GitCommit>();
             foreach (var c in commitsFromRemoteBranches)
             {
                 long id;
-                if (TryParseChangesetId(c.Message, out id))
+                var commit = new GitCommit(c);
+                if (commit.IsTfsChangeset)
                 {
-                    AddToChangesetCache(changesetId, c.Sha);
+                    AddToChangesetCache(commit.ChangesetId, commit);
 
-                    if (id == changesetId)
-                        commits.Add(c);
+                    if (commit.ChangesetId == changesetId)
+                        commits.Add(commit);
                 }
             }
 
