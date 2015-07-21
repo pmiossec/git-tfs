@@ -217,8 +217,8 @@ namespace Sep.Git.Tfs.VsCommon
         {
             var targetVersion = new ChangesetVersionSpec((int)targetChangeset);
             var searchTo = targetVersion;
-            var mergeInfo = VersionControl.QueryMerges(null, null, path, targetVersion, null, searchTo, RecursionType.Full);
-            if (mergeInfo.Length == 0) return -1;
+            var mergeInfo = VersionControl.QueryMerges(null, null, path, targetVersion, null, searchTo, RecursionType.Full).Where(x=>!x.Partial);
+            if (mergeInfo.Count() == 0) return -1;
             return mergeInfo.Max(x => x.SourceVersion);
         }
 
