@@ -374,6 +374,8 @@ namespace Sep.Git.Tfs.VsCommon
                         GetRelevantChangesetBasedOnChangeType(mergedItemsToFirstChangesetInBranchToCreate, tfsPathParentBranch, tfsPathBranchToCreate, out renameFromBranch);
 
                     AddNewRootBranch(rootBranches, new RootBranch(rootChangesetInParentBranch, tfsPathBranchToCreate));
+                    if (properties.InitialChangeset.HasValue && rootChangesetInParentBranch <= properties.InitialChangeset)
+                        return;
                     Trace.WriteLineIf(renameFromBranch != null, "Found original branch '" + renameFromBranch + "' (renamed in branch '" + tfsPathBranchToCreate + "')");
                     if (renameFromBranch != null)
                         GetRootChangesetForBranch(rootBranches, renameFromBranch);
