@@ -348,8 +348,12 @@ namespace Sep.Git.Tfs.VsCommon
 
                 if (tfsParentBranch == null)
                 {
-                    throw new GitTfsException("error : the branch you try to init '" + tfsPathBranchToCreate + "' is a root branch (e.g. has no parents).",
-                        new List<string> { "Clone this branch from Tfs instead of trying to init it!\n   Command: git tfs clone " + Url + " " + tfsPathBranchToCreate });
+                    //TODO: init the branch!!!!!!
+                    _stdout.WriteLine("warning: the branch you try to init '" + tfsPathBranchToCreate + "' is a root branch (e.g. has no parents)."
+                        + "the branch will not be created!!!");
+
+                    //throw new GitTfsException("error : the branch you try to init '" + tfsPathBranchToCreate + "' is a root branch (e.g. has no parents).",
+                    //    new List<string> { "Clone this branch from Tfs instead of trying to init it!\n   Command: git tfs clone " + Url + " " + tfsPathBranchToCreate });
                 }
 
                 tfsPathParentBranch = tfsParentBranch;
