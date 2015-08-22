@@ -397,7 +397,8 @@ namespace Sep.Git.Tfs.Core
             }
             else if (!IsIgnoringBranches())
             {
-                var parentChangesetId = Tfs.FindMergeChangesetParent(TfsRepositoryPath, changeset.Summary.ChangesetId, this);
+                string parentBranchTfsPath;
+                var parentChangesetId = Tfs.FindMergeChangesetParent(TfsRepositoryPath, changeset.Summary.ChangesetId, out parentBranchTfsPath);
                 if (parentChangesetId < 1)  // Handle missing merge parent info
                 {
                     if (stopOnFailMergeCommit)
@@ -408,7 +409,7 @@ namespace Sep.Git.Tfs.Core
                                      " is a merge changeset. But git-tfs is unable to determine the parent changeset.");
                     return true;
                 }
-                var shaParent = Repository.FindCommitHashByChangesetId(parentChangesetId);
+                var shaParent = Repository.FindCommitHashByChangesetId(parentChangesetId, parentBranchTfsPath);
                 if (shaParent == null)
                 {
                     string omittedParentBranch;
