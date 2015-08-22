@@ -91,8 +91,18 @@ namespace Sep.Git.Tfs.VsFake
             if (firstChangesetOfBranch != null)
                 return firstChangesetOfBranch.MergeChangesetDatas.BeforeMergeChangesetId;
             return -1;
-
         }
+
+        public int FindMergeChangesetParent(string path, long firstChangeset, out string parentBranchTfsPath)
+        {
+            //TODO
+            parentBranchTfsPath = "return a real $/tfs/Path";
+            var firstChangesetOfBranch = _script.Changesets.FirstOrDefault(c => c.IsMergeChangeset && c.MergeChangesetDatas.MergeIntoBranch == path && c.MergeChangesetDatas.BeforeMergeChangesetId < firstChangeset);
+            if (firstChangesetOfBranch != null)
+                return firstChangesetOfBranch.MergeChangesetDatas.BeforeMergeChangesetId;
+            return -1;
+        }
+
 
         private ITfsChangeset BuildTfsChangeset(ScriptedChangeset changeset, IGitTfsRemote remote)
         {
