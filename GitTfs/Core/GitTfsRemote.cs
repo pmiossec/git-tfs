@@ -413,7 +413,7 @@ namespace Sep.Git.Tfs.Core
                 if (shaParent == null)
                 {
                     string omittedParentBranch;
-                    shaParent = FindMergedRemoteAndFetch(parentChangesetId, stopOnFailMergeCommit, out omittedParentBranch);
+                    shaParent = FindMergedRemoteAndFetch(parentChangesetId, parentBranchTfsPath, stopOnFailMergeCommit, out omittedParentBranch);
                     changeset.OmittedParentBranch = omittedParentBranch;
                 }
                 if (shaParent != null)
@@ -543,20 +543,20 @@ namespace Sep.Git.Tfs.Core
             return workItemsTranslated;
         }
 
-        private string FindRootRemoteAndFetch(int parentChangesetId, IRenameResult renameResult = null)
+        private string FindRootRemoteAndFetch(int parentChangesetId, string parentBranchTfsPath, IRenameResult renameResult = null)
         {
             string omittedParentBranch;
-            return FindRemoteAndFetch(parentChangesetId, false, false, renameResult, out omittedParentBranch);
+            return FindRemoteAndFetch(parentChangesetId, parentBranchTfsPath, false, false, renameResult, out omittedParentBranch);
         }
 
-        private string FindMergedRemoteAndFetch(int parentChangesetId, bool stopOnFailMergeCommit, out string omittedParentBranch)
+        private string FindMergedRemoteAndFetch(int parentChangesetId, string parentBranchTfsPath, bool stopOnFailMergeCommit, out string omittedParentBranch)
         {
-            return FindRemoteAndFetch(parentChangesetId, false, true, null, out omittedParentBranch);
+            return FindRemoteAndFetch(parentChangesetId, parentBranchTfsPath, false, true, null, out omittedParentBranch);
         }
 
-        private string FindRemoteAndFetch(int parentChangesetId, bool stopOnFailMergeCommit, bool mergeChangeset, IRenameResult renameResult, out string omittedParentBranch)
+        private string FindRemoteAndFetch(int parentChangesetId, string parentBranchTfsPath, bool stopOnFailMergeCommit, bool mergeChangeset, IRenameResult renameResult, out string omittedParentBranch)
         {
-            var tfsRemote = FindOrInitTfsRemoteOfChangeset(parentChangesetId, mergeChangeset, renameResult, out omittedParentBranch);
+            var tfsRemote = FindOrInitTfsRemoteOfChangeset(parentChangesetId, parentBranchTfsPath, mergeChangeset, renameResult, out omittedParentBranch);
 
             if (tfsRemote != null && string.Compare(tfsRemote.TfsRepositoryPath, TfsRepositoryPath, StringComparison.InvariantCultureIgnoreCase) != 0)
             {
@@ -578,52 +578,34 @@ namespace Sep.Git.Tfs.Core
             return null;
         }
 
-        private IGitTfsRemote FindOrInitTfsRemoteOfChangeset(int parentChangesetId, bool mergeChangeset, IRenameResult renameResult, out string omittedParentBranch)
+        private IGitTfsRemote FindOrInitTfsRemoteOfChangeset(int parentChangesetId, string parentBranchTfsPath, bool mergeChangeset, IRenameResult renameResult, out string omittedParentBranch)
         {
             omittedParentBranch = null;
             IGitTfsRemote tfsRemote;
-            IChangeset parentChangeset = Tfs.GetChangeset(parentChangesetId);
             //I think you want something that uses GetPathInGitRepo and ShouldSkip. See TfsChangeset.Apply.
             //Don't know if there is a way to extract remote tfs repository path from changeset datas! Should be better!!!
-            var remote = Repository.ReadAllTfsRemotes().FirstOrDefault(r => parentChangeset.Changes.Any(c => r.GetPathInGitRepo(c.Item.ServerItem) != null));
+            var remote = Repository.ReadAllTfsRemotes().FirstOrDefault(r => r.TfsRepositoryPath == parentBranchTfsPath);
             if (remote != null)
                 tfsRemote = remote;
             else
             {
-                // If the changeset has created multiple folders, the expected branch folder will not always be the first
-                // so we scan all the changes of type folder to try to detect the first one which is a branch.
-                // In most cases it will change nothing: the first folder is the good one
-                IBranchObject tfsBranch = null;
-                string tfsPath = null;
-                var allBranches = Tfs.GetBranches(true);
-                foreach (var change in parentChangeset.Changes)
+                if (mergeChangeset && parentBranchTfsPath != null && Repository.GetConfig(GitTfsConstants.IgnoreNotInitBranches) == true.ToString())
                 {
-                    tfsPath = change.Item.ServerItem;
-                    tfsPath = tfsPath.EndsWith("/") ? tfsPath : tfsPath + "/";
-
-                    tfsBranch = allBranches.SingleOrDefault(b => tfsPath.StartsWith(b.Path.EndsWith("/") ? b.Path : b.Path + "/"));
-                    if(tfsBranch != null)
-                    {
-                        // we found a branch, we stop here
-                        break;
-                    }
-                }
-
-                if (mergeChangeset && tfsBranch != null && Repository.GetConfig(GitTfsConstants.IgnoreNotInitBranches) == true.ToString())
-                {
-                    stdout.WriteLine("warning: skip not initialized branch for path " + tfsBranch.Path);
+                    stdout.WriteLine("warning: skip not initialized branch for path " + parentBranchTfsPath);
                     tfsRemote = null;
-                    omittedParentBranch = tfsBranch.Path + ";C" + parentChangesetId;
+                    omittedParentBranch = parentBranchTfsPath + ";C" + parentChangesetId;
                 }
-                else if (tfsBranch == null)
+                else if (parentBranchTfsPath == null)
                 {
-                    stdout.WriteLine("error: branch not found. Verify that all the folders have been converted to branches (or something else :().\n\tpath {0}", tfsPath);
+                    stdout.WriteLine("error: branch not found. Verify that all the folders have been converted to branches (or something else :().\n\tpath {0}", parentBranchTfsPath);
                     tfsRemote = null;
                     omittedParentBranch = ";C" + parentChangesetId;
                 }
                 else
                 {
-                    tfsRemote = InitTfsRemoteOfChangeset(tfsBranch, parentChangeset.ChangesetId, renameResult);
+                    var allBranches = Tfs.GetBranches(true);
+                    var tfsBranch = allBranches.SingleOrDefault(b => parentBranchTfsPath == b.Path);
+                    tfsRemote = InitTfsRemoteOfChangeset(tfsBranch, parentChangesetId, renameResult);
                     if (tfsRemote == null)
                         omittedParentBranch = tfsBranch.Path + ";C" + parentChangesetId;
                 }
@@ -968,7 +950,7 @@ namespace Sep.Git.Tfs.Core
             {
                 sha1RootCommit = Repository.FindCommitHashByChangesetId(rootChangesetId);
                 if (fetchParentBranch && string.IsNullOrWhiteSpace(sha1RootCommit))
-                    sha1RootCommit = FindRootRemoteAndFetch(rootChangesetId, renameResult);
+                    sha1RootCommit = FindRootRemoteAndFetch(rootChangesetId, tfsRepositoryPath, renameResult);
                 if (string.IsNullOrWhiteSpace(sha1RootCommit))
                     return null;
 

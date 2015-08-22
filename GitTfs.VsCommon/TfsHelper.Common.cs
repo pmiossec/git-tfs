@@ -277,7 +277,7 @@ namespace Sep.Git.Tfs.VsCommon
                 tfsBranch = allBranches.SingleOrDefault(b => tfsPath.StartsWith(b.Path.EndsWith("/") ? b.Path : b.Path + "/"));
                 if (tfsBranch != null)
                 {
-                    if (branchesFoundInChangeset.Contains(tfsBranch))
+                    if (!branchesFoundInChangeset.Contains(tfsBranch))
                         branchesFoundInChangeset.Add(tfsBranch);
                 }
             }
