@@ -214,13 +214,75 @@ namespace Sep.Git.Tfs.VsCommon
             }
         }
 
-        public virtual int FindMergeChangesetParent(string path, long targetChangeset, GitTfsRemote remote)
+        public virtual int FindMergeChangesetParent(string path, long targetChangeset, out string parentBranchTfsPath)
         {
             var targetVersion = new ChangesetVersionSpec((int)targetChangeset);
             var searchTo = targetVersion;
-            var mergeInfo = VersionControl.QueryMerges(null, null, path, targetVersion, null, searchTo, RecursionType.Full);
-            if (mergeInfo.Length == 0) return -1;
-            return mergeInfo.Max(x => x.SourceVersion);
+            var mergedChangesets = VersionControl.QueryMerges(null, null, path, targetVersion, null, searchTo, RecursionType.Full)
+                .Where(c => c.TargetVersion == targetChangeset).OrderBy(c=>c.SourceVersion).ToList();
+            if (mergedChangesets.Count == 0)
+            {
+                parentBranchTfsPath = null;
+                return -1;
+            }
+            var mergeParentChangesetId = mergedChangesets.Max(x => x.SourceVersion);
+            // If the changeset has created multiple folders, the expected branch folder will not always be the first
+            // so we scan all the changes of type folder to try to detect the first one which is a branch.
+            // In most cases it will change nothing: the first folder is the good one
+            var allBranches = GetBranches(true);
+            var branchList = GetBranchesOfChangeset(allBranches, mergedChangesets.First());
+            if(branchList.Count == 1)
+            {
+                parentBranchTfsPath = branchList[0].Path;
+                return mergeParentChangesetId;
+            }
+
+            foreach (var changeset in mergedChangesets.Skip(1))
+            {
+                List<IBranchObject> branchesFoundInChangeset = GetBranchesOfChangeset(allBranches, mergedChangesets.First());
+                for (int i = branchList.Count - 1; i >= 0; i--)
+                {
+                    if (!branchesFoundInChangeset.Contains(branchList[i]))
+                        branchList.RemoveAt(i);
+                }
+                if (branchList.Count == 1)
+                {
+                    _stdout.WriteLine("Something went wrong!!!!!");
+                    parentBranchTfsPath = null;
+                    return mergeParentChangesetId;
+                }
+                if (branchList.Count == 1)
+                {
+                    parentBranchTfsPath = branchList[0].Path;
+                    return mergeParentChangesetId;
+                }
+            }
+
+            _stdout.WriteLine("Something went wrong!!!!!");
+            parentBranchTfsPath = null;
+            return mergeParentChangesetId;
+        }
+
+        private List<IBranchObject> GetBranchesOfChangeset(IEnumerable<IBranchObject> allBranches, ChangesetMerge changeset)
+        {
+            IChangeset parentChangeset = GetChangeset(changeset.SourceVersion);
+            var branchesFoundInChangeset = new List<IBranchObject>();
+            IBranchObject tfsBranch = null;
+            string tfsPath = null;
+            foreach (var change in parentChangeset.Changes)
+            {
+                tfsPath = change.Item.ServerItem;
+                tfsPath = tfsPath.EndsWith("/") ? tfsPath : tfsPath + "/";
+
+                tfsBranch = allBranches.SingleOrDefault(b => tfsPath.StartsWith(b.Path.EndsWith("/") ? b.Path : b.Path + "/"));
+                if (tfsBranch != null)
+                {
+                    if (branchesFoundInChangeset.Contains(tfsBranch))
+                        branchesFoundInChangeset.Add(tfsBranch);
+                }
+            }
+
+            return branchesFoundInChangeset;
         }
 
         public bool Is2008OrOlder

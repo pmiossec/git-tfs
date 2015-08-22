@@ -561,6 +561,11 @@ namespace Sep.Git.Tfs.Core
             return commit.Sha;
         }
 
+        public string FindCommitHashByChangesetId(int parentChangesetId, string parentBranchTfsPath)
+        {
+            throw new NotImplementedException();
+        }
+
         private static readonly Regex tfsIdRegex = new Regex("^git-tfs-id: .*;C([0-9]+)\r?$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.RightToLeft);
 
         public static bool TryParseChangesetId(string commitMessage, out long changesetId)
