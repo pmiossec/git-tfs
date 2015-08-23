@@ -363,16 +363,28 @@ namespace Sep.Git.Tfs.VsCommon
 
                 try
                 {
-                    var changesets = VersionControl.QueryHistory(tfsPathBranchToCreate, VersionSpec.Latest, 0, RecursionType.Full,
-                        null, null, null, 1, false, false, false, true).Cast<Changeset>();
-                    var firstChangesetInBranchToCreate = changesets.FirstOrDefault();
+                    IEnumerable<MergeInfo> mergedItemsToFirstChangesetInBranchToCreate = null;
+                    //Sometimes the first changeset is not the one where the branch is created!!!
+                    for (int i = 0; i<50;i++)
+                    {
+                        var changesets = VersionControl.QueryHistory(tfsPathBranchToCreate, VersionSpec.Latest, 0, RecursionType.Full,
+                            null, null, null, i + 1, false, false, false, true).Cast<Changeset>();
+                        if(!changesets.Any())
+                        {
+                            throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find first changeset for " + tfsPathBranchToCreate);
+                        }
 
-                    if (firstChangesetInBranchToCreate == null)
+                        var firstChangesetInBranchToCreate = changesets.ElementAt(i);
+
+                        mergedItemsToFirstChangesetInBranchToCreate = GetMergeInfo(tfsPathBranchToCreate, tfsPathParentBranch, firstChangesetInBranchToCreate.ChangesetId, lastChangesetIdToCheck);
+                        if (mergedItemsToFirstChangesetInBranchToCreate.Any())
+                            break;
+                    }
+
+                    if (mergedItemsToFirstChangesetInBranchToCreate == null)
                     {
                         throw new GitTfsException("An unexpected error occured when trying to find the root changeset.\nFailed to find first changeset for " + tfsPathBranchToCreate);
                     }
-
-                    var mergedItemsToFirstChangesetInBranchToCreate = GetMergeInfo(tfsPathBranchToCreate, tfsPathParentBranch, firstChangesetInBranchToCreate.ChangesetId, lastChangesetIdToCheck);
 
                     string renameFromBranch;
                     var rootChangesetInParentBranch =
