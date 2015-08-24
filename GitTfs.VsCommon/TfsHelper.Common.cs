@@ -274,7 +274,7 @@ namespace Sep.Git.Tfs.VsCommon
                 tfsPath = change.Item.ServerItem;
                 tfsPath = tfsPath.EndsWith("/") ? tfsPath : tfsPath + "/";
 
-                tfsBranch = allBranches.SingleOrDefault(b => tfsPath.StartsWith(b.Path.EndsWith("/") ? b.Path : b.Path + "/"));
+                tfsBranch = allBranches.SingleOrDefault(b => tfsPath.StartsWith(b.Path.EndsWith("/") ? b.Path : b.Path + "/", StringComparison.InvariantCultureIgnoreCase));
                 if (tfsBranch != null)
                 {
                     if (!branchesFoundInChangeset.Contains(tfsBranch))
