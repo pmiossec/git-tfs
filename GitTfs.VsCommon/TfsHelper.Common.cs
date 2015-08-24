@@ -239,13 +239,13 @@ namespace Sep.Git.Tfs.VsCommon
 
             foreach (var changeset in mergedChangesets.Skip(1))
             {
-                List<IBranchObject> branchesFoundInChangeset = GetBranchesOfChangeset(allBranches, mergedChangesets.First());
+                List<IBranchObject> branchesFoundInChangeset = GetBranchesOfChangeset(allBranches, changeset);
                 for (int i = branchList.Count - 1; i >= 0; i--)
                 {
                     if (!branchesFoundInChangeset.Contains(branchList[i]))
                         branchList.RemoveAt(i);
                 }
-                if (branchList.Count == 1)
+                if (branchList.Count == 0)
                 {
                     _stdout.WriteLine("Something went wrong!!!!!");
                     parentBranchTfsPath = null;
@@ -258,17 +258,25 @@ namespace Sep.Git.Tfs.VsCommon
                 }
             }
 
-            _stdout.WriteLine("Something went wrong!!!!!");
-            parentBranchTfsPath = null;
+            _stdout.WriteLine("warning: more than one branch found: ");
+            foreach (var branch in branchList)
+            {
+                _stdout.WriteLine("  - " + branch.Path);
+            }
+
+            _stdout.WriteLine("Taking the first one because it appears more often...");
+            parentBranchTfsPath = branchList.First().Path;
             return mergeParentChangesetId;
         }
 
         private List<IBranchObject> GetBranchesOfChangeset(IEnumerable<IBranchObject> allBranches, ChangesetMerge changeset)
         {
             IChangeset parentChangeset = GetChangeset(changeset.SourceVersion);
-            var branchesFoundInChangeset = new List<IBranchObject>();
+            var branchesFoundInChangeset = new Dictionary<IBranchObject,int>();
             IBranchObject tfsBranch = null;
             string tfsPath = null;
+            //TODO Gérer un poid => Décision probabiliste lorsqu'un seul changeset mergé et plusieurs branches détectées!!!
+            //=> Just trier par nombre d'occurences!?!
             foreach (var change in parentChangeset.Changes)
             {
                 tfsPath = change.Item.ServerItem;
@@ -277,12 +285,18 @@ namespace Sep.Git.Tfs.VsCommon
                 tfsBranch = allBranches.SingleOrDefault(b => tfsPath.StartsWith(b.Path.EndsWith("/") ? b.Path : b.Path + "/", StringComparison.InvariantCultureIgnoreCase));
                 if (tfsBranch != null)
                 {
-                    if (!branchesFoundInChangeset.Contains(tfsBranch))
-                        branchesFoundInChangeset.Add(tfsBranch);
+                    if (!branchesFoundInChangeset.ContainsKey(tfsBranch))
+                    {
+                        branchesFoundInChangeset.Add(tfsBranch, 1);
+                    }
+                    else
+                    {
+                        branchesFoundInChangeset[tfsBranch] = branchesFoundInChangeset[tfsBranch] + 1;
+                    }
                 }
             }
 
-            return branchesFoundInChangeset;
+            return branchesFoundInChangeset.OrderByDescending(v => v.Value).Select(v=>v.Key).ToList();
         }
 
         public bool Is2008OrOlder
