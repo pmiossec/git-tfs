@@ -1,1 +1,1 @@
-* Improve vrify command (check all remote option, add exit code, add ignore path case mismatch option) (#853, @pmiossec)
+* Fix support of TFS2015 by managing tfs assemblies with nuget (#837, @pmiossec)
