@@ -28,3 +28,6 @@ after_test:
   - ps: |
       & ".\FunctionalTesting\smoke_tests.ps1" "$Env:APPVEYOR_BUILD_FOLDER\GitTfs\bin\$env:Config"
       Push-AppveyorArtifact $zipFile
+	  
+	  
+	  #Test
