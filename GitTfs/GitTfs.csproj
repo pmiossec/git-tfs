@@ -106,6 +106,7 @@
       <Link>Properties\Version.cs</Link>
     </Compile>
     <Compile Include="Commands\Checkout.cs" />
+    <Compile Include="Commands\Dev.cs" />
     <Compile Include="Commands\ResetRemote.cs" />
     <Compile Include="Commands\Create.cs" />
     <Compile Include="Commands\ListRemoteBranches.cs" />
