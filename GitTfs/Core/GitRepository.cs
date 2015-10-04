@@ -513,20 +513,22 @@ namespace Sep.Git.Tfs.Core
         {
             if (!Reference.IsValidName(ShortToLocalName(gitBranchName)))
                 throw new GitTfsException("The name specified for the new git branch is not allowed. Choose another one!");
-            while (IsRefNameUsed(gitBranchName))
+            var refs = _repository.Refs.Select(r => r.CanonicalName).ToList();
+            while (IsRefNameUsed(gitBranchName, refs))
             {
                 gitBranchName = "_" + gitBranchName;
             }
             return gitBranchName;
         }
 
-        private bool IsRefNameUsed(string gitBranchName)
+        private static bool IsRefNameUsed(string gitBranchName, List<string> refs)
         {
             var parts = gitBranchName.Split('/');
             var refName = parts.First();
             for (int i = 1; i <= parts.Length; i++)
             {
-                if (HasRef(ShortToLocalName(refName)) || HasRef(ShortToTfsRemoteName(refName)))
+                if (refs.Exists(s=>string.Compare(ShortToLocalName(refName), s, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    || refs.Exists(s => string.Compare(ShortToTfsRemoteName(refName), s, StringComparison.InvariantCultureIgnoreCase) == 0))
                     return true;
                 if (i < parts.Length)
                     refName += '/' + parts[i];
