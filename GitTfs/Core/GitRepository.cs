@@ -552,15 +552,6 @@ namespace Sep.Git.Tfs.Core
         private readonly Dictionary<int, string> changesetsCache = new Dictionary<int, string>();
         private bool cacheIsFull = false;
 
-        public string FindCommitHashByChangesetId(int changesetId)
-        {
-            var commit = FindCommitByChangesetId(changesetId);
-            if (commit == null)
-                return null;
-
-            return commit.Sha;
-        }
-
         public string FindCommitHashByChangesetId(int changesetId, string tfsPath)
         {
             var commit = FindCommitByChangesetId(changesetId, tfsPath: tfsPath);

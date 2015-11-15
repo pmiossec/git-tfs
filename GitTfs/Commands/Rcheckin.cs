@@ -136,11 +136,11 @@ namespace Sep.Git.Tfs.Commands
                 _stdout.WriteLine("Starting checkin of {0} '{1}'", target.Substring(0, 8), commitSpecificCheckinOptions.CheckinComment);
                 try
                 {
-                    newChangesetId = tfsRemote.Checkin(target, currentParent, parentChangeset, commitSpecificCheckinOptions, tfsRepositoryPathOfMergedBranch);
+                    newChangesetId = (int)tfsRemote.Checkin(target, currentParent, parentChangeset, commitSpecificCheckinOptions, tfsRepositoryPathOfMergedBranch);
                     var fetchResult = tfsRemote.FetchWithMerge(newChangesetId, false, parents.Select(c=>c.Sha).ToArray());
                     if (fetchResult.NewChangesetCount != 1)
                     {
-                        var lastCommit = _globals.Repository.FindCommitHashByChangesetId(newChangesetId);
+                        var lastCommit = _globals.Repository.FindCommitHashByChangesetId(newChangesetId, tfsRemote.TfsRepositoryPath);
                         RebaseOnto(lastCommit, target);
                         if (AutoRebase)
                             tfsRemote.Repository.CommandNoisy("rebase", "--preserve-merges", tfsRemote.RemoteRef);
@@ -156,7 +156,7 @@ namespace Sep.Git.Tfs.Commands
                 {
                     if (newChangesetId != 0)
                     {
-                        var lastCommit = _globals.Repository.FindCommitHashByChangesetId(newChangesetId);
+                        var lastCommit = _globals.Repository.FindCommitHashByChangesetId(newChangesetId, tfsRemote.TfsRepositoryPath);
                         RebaseOnto(lastCommit, currentParent);
                     }
                     throw;

@@ -573,7 +573,7 @@ namespace Sep.Git.Tfs.Core
                     if (tfsRemote.Repository.IsBare)
                         tfsRemote.Repository.UpdateRef(GitRepository.ShortToLocalName(tfsRemote.Id), tfsRemote.MaxCommitHash);
                 }
-                return Repository.FindCommitHashByChangesetId(parentChangesetId);
+                return Repository.FindCommitHashByChangesetId(parentChangesetId, tfsRemote.TfsRepositoryPath);
             }
             return null;
         }
@@ -948,7 +948,7 @@ namespace Sep.Git.Tfs.Core
             string sha1RootCommit = null;
             if (rootChangesetId != -1)
             {
-                sha1RootCommit = Repository.FindCommitHashByChangesetId(rootChangesetId);
+                sha1RootCommit = Repository.FindCommitHashByChangesetId((int)rootChangesetId, tfsRepositoryPath);
                 if (fetchParentBranch && string.IsNullOrWhiteSpace(sha1RootCommit))
                     sha1RootCommit = FindRootRemoteAndFetch(rootChangesetId, tfsRepositoryPath, renameResult);
                 if (string.IsNullOrWhiteSpace(sha1RootCommit))
