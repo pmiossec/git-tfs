@@ -563,32 +563,31 @@ namespace Sep.Git.Tfs.Core
 
         public string FindCommitHashByChangesetId(int changesetId, string tfsPath)
         {
-            var commit = FindCommitByChangesetId(changesetId);
+            var commit = FindCommitByChangesetId(changesetId, tfsPath: tfsPath);
             if (commit == null)
                 return null;
-            //TODO!!!!!!
-            if (!commit.Message.Contains(tfsPath))
-                throw new NotImplementedException("//TODO!!!!!!");
 
             return commit.Sha;
         }
 
-        private static readonly Regex tfsIdRegex = new Regex("^git-tfs-id: .*;C([0-9]+)\r?$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.RightToLeft);
+        private static readonly Regex tfsIdRegex = new Regex(@"^git-tfs-id: \[(.*)\](.*);C([0-9]+)\r?$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.RightToLeft);
 
-        public static bool TryParseChangesetId(string commitMessage, out long changesetId)
+        public static bool TryParseChangesetId(string commitMessage, out long changesetId, out string tfsPath)
         {
             var match = tfsIdRegex.Match(commitMessage);
             if (match.Success)
             {
-                changesetId = long.Parse(match.Groups[1].Value);
+                changesetId = long.Parse(match.Groups[3].Value);
+                tfsPath = match.Groups[2].Value;
                 return true;
             }
 
             changesetId = 0;
+            tfsPath = null;
             return false;
         }
 
-        private Commit FindCommitByChangesetId(long changesetId, string remoteRef = null)
+        private Commit FindCommitByChangesetId(long changesetId, string remoteRef = null, string tfsPath = null)
         {
             Trace.WriteLine("Looking for changeset " + changesetId + " in git repository...");
 
@@ -615,13 +614,17 @@ namespace Sep.Git.Tfs.Core
             foreach (var c in commitsFromRemoteBranches)
             {
                 long id;
-                if (TryParseChangesetId(c.Message, out id))
+                string tfsPathFound;
+                if (TryParseChangesetId(c.Message, out id, out tfsPathFound))
                 {
                     changesetsCache[id] = c.Sha;
                     if (id == changesetId)
                     {
-                        commit = c;
-                        break;
+                        if (tfsPath != null || string.Compare(tfsPathFound, tfsPath, StringComparison.InvariantCultureIgnoreCase) == 0 )
+                        {
+                            commit = c;
+                            break;
+                        }
                     }
                 }
             }
