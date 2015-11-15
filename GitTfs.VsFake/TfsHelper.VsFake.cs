@@ -95,11 +95,13 @@ namespace Sep.Git.Tfs.VsFake
 
         public int FindMergeChangesetParent(string path, int firstChangeset, out string parentBranchTfsPath)
         {
-            //TODO
-            parentBranchTfsPath = "return a real $/tfs/Path";
             var firstChangesetOfBranch = _script.Changesets.FirstOrDefault(c => c.IsMergeChangeset && c.MergeChangesetDatas.MergeIntoBranch == path && c.MergeChangesetDatas.BeforeMergeChangesetId < firstChangeset);
             if (firstChangesetOfBranch != null)
+            {
+                parentBranchTfsPath = firstChangesetOfBranch.MergeChangesetDatas.BranchPath;
                 return firstChangesetOfBranch.MergeChangesetDatas.BeforeMergeChangesetId;
+            }
+            parentBranchTfsPath = null;
             return -1;
         }
 
