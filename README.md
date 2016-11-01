@@ -1,4 +1,22 @@
-﻿## Introduction
+﻿<!---------------------- NOTICE ----------------------------
+Copyright 2009-2011 Software Engineering Professionals, Inc.
+Copyright 2011-2012 Matt Burke
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at : http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+
+This software distribution contains the following libraries:
+NDesk.Options, Copyright (C) 2008 Novell (http://www.novell.com) http://www.ndesk.org/Options
+LibGit2Sharp, Copyright (c) 2011-2012 LibGit2Sharp contributors https://github.com/libgit2/libgit2sharp/
+libgit2, Copyright (C) 2009-2012 the libgit2 contributors http://libgit2.github.com/
+StructureMap, copyright 2004-2009 Jeremy D. Miller http://structuremap.sourceforge.net/
+-------------------- NOTICE ------------------------------>
+
+## Introduction
 
 [git-tfs](http://git-tfs.com/) is a two-way bridge between TFS (Team Foundation Server) and git, similar to git-svn.
 It fetches TFS commits into a git repository, and lets you push your updates back to TFS.
@@ -196,3 +214,4 @@ If you have questions or suggestions about how we could improve git-tfs you coul
 
 Drop in and chat in [![gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/git-tfs/git-tfs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 We also have a [mailing list](https://groups.google.com/group/git-tfs-dev).
+

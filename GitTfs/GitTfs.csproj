@@ -245,10 +245,6 @@
       <Link>LICENSE</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\NOTICE">
-      <Link>NOTICE</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="..\README.md">
       <Link>README.md</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
