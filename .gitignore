@@ -7,7 +7,7 @@ _ReSharper.*
 .*.swp
 *.wixobj
 *.msi
-/Auth.targets
+/PersonalTokens.config
 
 # Build outputs
 bin
