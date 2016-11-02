@@ -57,5 +57,6 @@ FRAMEWORK: NET45
 NUGET
   remote: https://www.nuget.org/api/v2
     Cake (0.16.2)
+    Cake.Git (0.10)
     GitVersion.CommandLine (3.6.4)
     xunit.runner.console (2.1)
