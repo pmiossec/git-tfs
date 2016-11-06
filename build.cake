@@ -126,7 +126,7 @@ Task("Version").Description("Get the version using GitVersion")
 	Information("Semantic version (long ):" + _semanticVersionLong);
 
 	//Update all the variables now that we know the version number
-	var postFix = (version.BranchName == "master") ? string.Empty : "-" + NormalizeBrancheName(version.BranchName);
+	var postFix = (version.BranchName == "master") ? string.Empty : "-" + version.Sha.Substring(0,8) + "." + NormalizeBrancheName(version.BranchName);
 	_zipFilename = string.Format(ZipFileTemplate, _semanticVersionShort + postFix);
 	_zipFilePath = System.IO.Path.Combine(buildAssetPath, _zipFilename);
 	_downloadUrl = string.Format(DownloadUrlTemplate, _semanticVersionShort) + _zipFilename;
