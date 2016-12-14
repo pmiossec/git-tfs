@@ -98,9 +98,6 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="..\Version.cs">
-      <Link>Properties\Version.cs</Link>
-    </Compile>
     <Compile Include="Commands\Checkout.cs" />
     <Compile Include="Commands\ResetRemote.cs" />
     <Compile Include="Commands\Create.cs" />
@@ -246,10 +243,6 @@
     </None>
     <None Include="..\LICENSE">
       <Link>LICENSE</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\NOTICE">
-      <Link>NOTICE</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\README.md">

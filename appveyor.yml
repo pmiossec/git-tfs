@@ -1,33 +1,25 @@
 ﻿#appveyor.yml reference: http://www.appveyor.com/docs/appveyor-yml
-version: 0.25.1.{build}
-platform: Any CPU
+#version: 0.25.1.{build}
+#platform: Any CPU
 clone_folder: c:\gittfs
-clone_depth: 1
+#clone_depth: 1 #Do not use this parameter when using GitVersion!!!!
 # build cache to preserve files/folders between builds
 cache:
-  - packages -> **\repositories.config  # preserve "packages" directory in the root of build folder but will reset it if repositories.config is modified
+  - packages -> paket.lock  # preserve "packages" directory in the root of build folder but will reset it if `paket.lock` is modified
 init: []
-install:
-  - choco install tfs2010objectmodel -y
-before_build:
-  - ps: $env:Config = "Release"
+#before_build:
+#  - ps: $env:Config = "Release"
 build_script:
-  - msbuild GitTfs.sln /t:GitTfs_Vs2010 /t:GitTfs_Vs2012 /t:GitTfs_Vs2013 /t:GitTfs_Vs2015 /t:GitTfsTest /verbosity:minimal /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /nologo /p:BuildInParallel=true /m:4
-after_build:
-  - ps: |
-      if ( ! (Test-Path -Path "$Env:APPVEYOR_BUILD_FOLDER\GitTfs\bin\$env:Config\NativeBinaries")) {
-        $libgit2Binaries=Get-ChildItem ".\packages\" -Filter "LibGit2Sharp.NativeBinaries\libgit2\windows" -Recurse | Select-Object -First 1 | % { $_.FullName }
-        Copy-Item $libgit2Binaries "$Env:APPVEYOR_BUILD_FOLDER\GitTfs\bin\$env:Config\NativeBinaries" -Recurse
-      }
-      Get-ChildItem .\packages -Recurse -Filter Microsoft.WITDataStore*.dll | Copy-Item -Destination "$Env:APPVEYOR_BUILD_FOLDER\GitTfs\bin\$env:Config\GitTfs.Vs2015\"
-      $zipFile= "git-tfs_$Env:APPVEYOR_REPO_COMMIT.zip"
-      7z a $zipFile "$Env:APPVEYOR_BUILD_FOLDER\GitTfs\bin\$env:Config\*" -xr!"*.pdb"
-      git config --global user.name "For gittfs test"
-      git config --global user.email gittfs@fortest.com
-test:
-  assemblies: '**\GitTfsTest.dll'
-after_test:
-  - ps: |
-      & ".\FunctionalTesting\smoke_tests.ps1" "$Env:APPVEYOR_BUILD_FOLDER\GitTfs\bin\$env:Config"
-      Push-AppveyorArtifact $zipFile
-      Get-ChildItem .\GitTfs.Setup\GitTfs-*.msi | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+- ps: |
+    if($env:target -eq $null)
+    {
+      $target = "AppVeyorBuild"
+    }
+    else
+    {
+      $target = $env:target
+    }
+
+    echo "target: $target"
+    .\build.ps1 -Target "$target" -ScriptArgs '-gitHubToken="$env:gitHubToken" -chocolateyToken="$env:chocolateyToken"'
+test: off

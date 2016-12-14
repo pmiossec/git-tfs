@@ -32,10 +32,8 @@ NUGET
       Newtonsoft.Json (>= 6.0.8) - framework: net45
       System.IdentityModel.Tokens.Jwt (>= 4.0) - framework: net45
       WindowsAzure.ServiceBus (>= 2.5.1) - framework: net45
-    MSBuildTasks (1.4.0.45) - framework: >= net40
     Newtonsoft.Json (9.0.1)
     NLog (4.3.10)
-    NuGet.CommandLine (3.4.3)
     System.IdentityModel.Tokens.Jwt (5.0)
     WindowsAzure.ServiceBus (3.4) - framework: net45
     WixSharp (1.0.22.3) - framework: >= net40
@@ -51,6 +49,13 @@ NUGET
       xunit.abstractions (2.0)
     xunit.extensibility.execution (2.1) - framework: net45
       xunit.extensibility.core (2.1) - framework: net45
-    xunit.runner.console (2.1)
-    xunit.runner.msbuild (2.1)
     xunit.runner.visualstudio (2.1)
+
+GROUP Build
+REDIRECTS: OFF
+FRAMEWORK: NET45
+NUGET
+  remote: https://www.nuget.org/api/v2
+    Cake (0.16.2)
+    GitVersion.CommandLine (3.6.4)
+    xunit.runner.console (2.1)
