@@ -12,6 +12,7 @@ namespace Sep.Git.Tfs.Core
 {
     public class GitChangeInfo
     {
+        const string ElementToRemove = "[ElementToRemove]";
         public struct ChangeType
         {
             public const string ADD = "A";
@@ -69,18 +70,17 @@ namespace Sep.Git.Tfs.Core
 
             foreach (var change in remainingChanges)
             {
-                if(change.Status == ChangeType.RENAMEEDIT)
+                if (change.Status == ChangeType.RENAMEEDIT)
                 {
-                    if(String.Compare(change.path, change.pathTo, StringComparison.OrdinalIgnoreCase) == 0)
+                    if (String.Compare(change.path, change.pathTo, StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         change.Status = ChangeType.MODIFY;
                     }
                 }
             }
 
-            var deletes = remainingChanges.Select((change, index) => new { change, index})
+            var deletes = remainingChanges.Select((change, index) => new { change, index })
                 .Where(item => item.change.Status == ChangeType.DELETE).ToArray();
-            const String removeElement = "RemoveElement";
             foreach (var change in remainingChanges)
             {
                 //change adds to renameedit, if the file name is the same as a delete
@@ -95,14 +95,14 @@ namespace Sep.Git.Tfs.Core
                         }
                         else
                         {
-                            change.Status = removeElement;
+                            change.Status = ElementToRemove;
                         }
-                        remainingChanges[deleted.index].Status = removeElement;
+                        remainingChanges[deleted.index].Status = ElementToRemove;
                     }
                 }
             }
 
-            return remainingChanges.Where(cha => cha.Status != removeElement);
+            return remainingChanges.Where(cha => cha.Status != ElementToRemove);
         }
 
         private static string GetDiffTreeLine(TextReader reader)
@@ -169,7 +169,7 @@ namespace Sep.Git.Tfs.Core
         }
 
         private readonly Match _match;
-        public string Status{ get; set; }
+        public string Status { get; set; }
 
         private GitChangeInfo(Match match)
         {
