@@ -76,17 +76,16 @@ namespace Sep.Git.Tfs.Core
                 }
             }
 
-            var deletes = remainingChanges.Select((change, index) => new { change, index })
-                .Where(item => item.change.Status == ChangeType.DELETE).ToArray();
+            var deletes = remainingChanges.Where(c => c.Status == ChangeType.DELETE).ToArray();
             foreach (var change in remainingChanges)
             {
                 //change adds to renameedit, if the file name is the same as a delete
                 if (change.Status == ChangeType.ADD)
                 {
-                    var matchingDelete = deletes.FirstOrDefault(item => String.Equals(change.path, item.change.path, StringComparison.OrdinalIgnoreCase));
+                    var matchingDelete = deletes.FirstOrDefault(d => String.Equals(change.path, d.path, StringComparison.OrdinalIgnoreCase));
                     if (matchingDelete != null)
                     {
-                        if (change.newSha != matchingDelete.change.oldSha)
+                        if (change.newSha != matchingDelete.oldSha)
                         {
                             change.Status = ChangeType.MODIFY;
                         }
@@ -94,7 +93,7 @@ namespace Sep.Git.Tfs.Core
                         {
                             change.Status = ElementToRemove;
                         }
-                        remainingChanges[matchingDelete.index].Status = ElementToRemove;
+                        matchingDelete.Status = ElementToRemove;
                     }
                 }
             }
