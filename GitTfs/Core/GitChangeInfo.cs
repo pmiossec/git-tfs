@@ -63,19 +63,16 @@ namespace Sep.Git.Tfs.Core
 
         private static IEnumerable<GitChangeInfo> FilterNotRepresentable(IEnumerable<GitChangeInfo> changes)
         {
-            //filter case only renames out, they cannot be represented in TFS
+            //filter out "case only renames" because they cannot be represented in TFS
             var remainingChanges = changes.Where(change => change.Status != ChangeType.RENAMEEDIT ||
                 String.Compare(change.path, change.pathTo, StringComparison.OrdinalIgnoreCase) != 0 ||
                 change.newSha != change.oldSha).ToList();
 
-            foreach (var change in remainingChanges)
+            foreach (var change in remainingChanges.Where(c => c.Status == ChangeType.RENAMEEDIT))
             {
-                if (change.Status == ChangeType.RENAMEEDIT)
+                if (String.Compare(change.path, change.pathTo, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    if (String.Compare(change.path, change.pathTo, StringComparison.OrdinalIgnoreCase) == 0)
-                    {
-                        change.Status = ChangeType.MODIFY;
-                    }
+                    change.Status = ChangeType.MODIFY;
                 }
             }
 
