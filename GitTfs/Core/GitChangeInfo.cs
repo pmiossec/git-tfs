@@ -88,7 +88,7 @@ namespace Sep.Git.Tfs.Core
                 }
             }
 
-            return remainingChanges.Where(cha => cha.Status != ElementToRemove);
+            return remainingChanges.Where(c => c.Status != ElementToRemove);
         }
 
         private static string GetDiffTreeLine(TextReader reader)
