@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using StructureMap;
@@ -46,6 +47,7 @@ namespace Sep.Git.Tfs.Core
         public static IEnumerable<GitChangeInfo> GetChangedFiles(TextReader reader)
         {
             string line;
+            var changes = new List<GitChangeInfo>();
             while (null != (line = GetDiffTreeLine(reader)))
             {
                 var change = Parse(line);
@@ -53,8 +55,54 @@ namespace Sep.Git.Tfs.Core
                 if (FileMode.GitLink == change.NewMode)
                     continue;
 
-                yield return change;
+                changes.Add(change);
             }
+            return FilterNotRepresentable(changes);
+        }
+
+        private static IEnumerable<GitChangeInfo> FilterNotRepresentable(IEnumerable<GitChangeInfo> changes)
+        {
+            //filter case only renames out, they cannot be represented in TFS
+            var remainingChanges = changes.Where(change => change.Status != ChangeType.RENAMEEDIT ||
+                String.Compare(change.path, change.pathTo, StringComparison.OrdinalIgnoreCase) != 0 ||
+                change.newSha != change.oldSha).ToList();
+
+            foreach (var change in remainingChanges)
+            {
+                if(change.Status == ChangeType.RENAMEEDIT)
+                {
+                    if(String.Compare(change.path, change.pathTo, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        change.Status = ChangeType.MODIFY;
+                    }
+                }
+            }
+
+            var deletes = remainingChanges.Select((change, index) => new { change, index})
+                .Where(item => item.change.Status == ChangeType.DELETE).ToArray();
+            const String removeElement = "RemoveElement";
+            foreach (var change in remainingChanges)
+            {
+                //change adds to renameedit, if the file name is the same as a delete
+                if (change.Status == ChangeType.ADD)
+                {
+                    if (deletes.Any(item => String.Equals(change.path, item.change.path, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        var deleted = deletes.Single(item => String.Equals(change.path, item.change.path, StringComparison.OrdinalIgnoreCase));
+                        if (change.newSha != deleted.change.oldSha)
+                        {
+                            change.Status = ChangeType.MODIFY;
+                        }
+                        else
+                        {
+                            change.Status = removeElement;
+                        }
+                        remainingChanges[deleted.index].Status = removeElement;
+                    }
+                }
+            }
+
+            return remainingChanges.Where(cha => cha.Status != removeElement);
         }
 
         private static string GetDiffTreeLine(TextReader reader)
@@ -121,14 +169,15 @@ namespace Sep.Git.Tfs.Core
         }
 
         private readonly Match _match;
+        public string Status{ get; set; }
 
         private GitChangeInfo(Match match)
         {
             _match = match;
+            Status = _match.Groups["status"].Value;
         }
 
         public LibGit2Sharp.Mode NewMode { get { return _match.Groups["dstmode"].Value.ToFileMode(); } }
-        public string Status { get { return _match.Groups["status"].Value; } }
 
         public string oldMode { get { return _match.Groups["srcmode"].Value; } }
         public string newMode { get { return _match.Groups["dstmode"].Value; } }
