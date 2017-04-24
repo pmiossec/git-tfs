@@ -86,10 +86,10 @@ namespace Sep.Git.Tfs.Core
                 //change adds to renameedit, if the file name is the same as a delete
                 if (change.Status == ChangeType.ADD)
                 {
-                    if (deletes.Any(item => String.Equals(change.path, item.change.path, StringComparison.OrdinalIgnoreCase)))
+                    var matchingDelete = deletes.FirstOrDefault(item => String.Equals(change.path, item.change.path, StringComparison.OrdinalIgnoreCase));
+                    if (matchingDelete != null)
                     {
-                        var deleted = deletes.Single(item => String.Equals(change.path, item.change.path, StringComparison.OrdinalIgnoreCase));
-                        if (change.newSha != deleted.change.oldSha)
+                        if (change.newSha != matchingDelete.change.oldSha)
                         {
                             change.Status = ChangeType.MODIFY;
                         }
@@ -97,7 +97,7 @@ namespace Sep.Git.Tfs.Core
                         {
                             change.Status = ElementToRemove;
                         }
-                        remainingChanges[deleted.index].Status = ElementToRemove;
+                        remainingChanges[matchingDelete.index].Status = ElementToRemove;
                     }
                 }
             }
