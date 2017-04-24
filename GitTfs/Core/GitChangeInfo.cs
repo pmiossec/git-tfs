@@ -85,14 +85,7 @@ namespace Sep.Git.Tfs.Core
                     var matchingDelete = deletes.FirstOrDefault(d => String.Equals(change.path, d.path, StringComparison.OrdinalIgnoreCase));
                     if (matchingDelete != null)
                     {
-                        if (change.newSha != matchingDelete.oldSha)
-                        {
-                            change.Status = ChangeType.MODIFY;
-                        }
-                        else
-                        {
-                            change.Status = ElementToRemove;
-                        }
+                        change.Status = change.newSha != matchingDelete.oldSha ? ChangeType.MODIFY : ElementToRemove;
                         matchingDelete.Status = ElementToRemove;
                     }
                 }
