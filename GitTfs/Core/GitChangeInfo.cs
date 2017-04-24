@@ -77,17 +77,14 @@ namespace Sep.Git.Tfs.Core
             }
 
             var deletes = remainingChanges.Where(c => c.Status == ChangeType.DELETE).ToArray();
-            foreach (var change in remainingChanges)
+            foreach (var addChange in remainingChanges.Where(c => c.Status == ChangeType.ADD))
             {
                 //change adds to renameedit, if the file name is the same as a delete
-                if (change.Status == ChangeType.ADD)
+                var matchingDelete = deletes.FirstOrDefault(d => String.Equals(addChange.path, d.path, StringComparison.OrdinalIgnoreCase));
+                if (matchingDelete != null)
                 {
-                    var matchingDelete = deletes.FirstOrDefault(d => String.Equals(change.path, d.path, StringComparison.OrdinalIgnoreCase));
-                    if (matchingDelete != null)
-                    {
-                        change.Status = change.newSha != matchingDelete.oldSha ? ChangeType.MODIFY : ElementToRemove;
-                        matchingDelete.Status = ElementToRemove;
-                    }
+                    addChange.Status = addChange.newSha != matchingDelete.oldSha ? ChangeType.MODIFY : ElementToRemove;
+                    matchingDelete.Status = ElementToRemove;
                 }
             }
 
