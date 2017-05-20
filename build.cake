@@ -76,8 +76,8 @@ Task("TagVersion").Description("Handle release note and tag the new version")
 			var newReleaseNotePath = @"doc\release-notes\v" + nextVersion + ".md";
 			MoveFile(ReleaseNotesPath, newReleaseNotePath);
 
-			GitAdd(".", newReleaseNotePath);
-			GitRemove(".", false, ReleaseNotesPath);
+//M 			GitAdd(".", newReleaseNotePath);
+//M 			GitRemove(".", false, ReleaseNotesPath);
 			GitCommit(".", @"Git-tfs release bot", "no-reply@git-tfs.com", "Prepare release v" + tag);
 			ReleaseNotesPath = newReleaseNotePath;
 			GitPush(".", GetGithubUserAccount(), GetGithubAuthToken(), "master");
@@ -254,7 +254,7 @@ Task("Package").Description("Generate the release zip file")
 		CopyDirectory(@".\packages\LibGit2Sharp.NativeBinaries\runtimes\win7-x86\native", libgit2NativeBinariesFolder);
 	}
 	CopyFiles(@".\packages\**\Microsoft.WITDataStore*.dll", OutputDirectory + @"\GitTfs.Vs2015\");
-	CopyFiles(new[] {"README.md", "LICENSE", "NOTICE"}, OutputDirectory);
+//M 	CopyFiles(new[] {"README.md", "LICENSE", "NOTICE"}, OutputDirectory);
 	DeleteFiles(OutputDirectory + @"\*.pdb");
 
 	//Create the zip
@@ -396,7 +396,7 @@ Task("CreateGithubRelease").Description("Create a GitHub release")
 	Information("Github Release created. Id:" + gitHubRelease.Id);
 	Information("If needed, delete the Github Release with the command:");
 	Information(@".\tools\Cake\Cake.exe build.cake -target=DeleteRelease -idGitHubReleaseToDelete="+ gitHubRelease.Id);
-	UploadReleaseAsset(client, gitHubRelease);
+//M 	UploadReleaseAsset(client, gitHubRelease);
 });
 
 Task("DeleteRelease").Description("Delete a (broken) GitHub release")
@@ -451,11 +451,11 @@ Task("Chocolatey").Description("Generate the chocolatey package")
 		releaseNotes = "See https://github.com/git-tfs/git-tfs/releases/tag/v" + _semanticVersionShort;
 	}
 	//http://cakebuild.net/dsl/chocolatey
-	ChocolateyPack(nuspecPathInBuildDir, new ChocolateyPackSettings {
-								Version			= _semanticVersionShort,
-								ReleaseNotes	= releaseNotes.Split(new string[] { Environment.NewLine }, StringSplitOptions.None),
-								OutputDirectory = ChocolateyBuildDir
-								});
+//M 	ChocolateyPack(nuspecPathInBuildDir, new ChocolateyPackSettings {
+//M 								Version			= _semanticVersionShort,
+//M 								ReleaseNotes	= releaseNotes.Split(new string[] { Environment.NewLine }, StringSplitOptions.None),
+//M 								OutputDirectory = ChocolateyBuildDir
+//M 								});
 	var chocolateyPackage = "gittfs." + _semanticVersionShort + ".nupkg";
 	var chocolateyPackagePath = System.IO.Path.Combine(ChocolateyBuildDir, chocolateyPackage);
 	if(!IsDryRun)
