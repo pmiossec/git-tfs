@@ -3,6 +3,7 @@ using NDesk.Options;
 using StructureMap;
 using GitTfs.Core;
 using System.Diagnostics;
+using GitTfs.Util;
 
 namespace GitTfs.Commands
 {

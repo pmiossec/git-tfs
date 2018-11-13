@@ -1,7 +1,7 @@
 ﻿using GitTfs.Core.TfsInterop;
 using GitTfs.Test;
 using GitTfs.VsCommon;
-using StructureMap.AutoMocking;
+using StructureMap.AutoMocking.Moq;
 using Xunit;
 
 namespace GitTfsTest.Core
@@ -13,7 +13,6 @@ namespace GitTfsTest.Core
         public TfsApiBridgeTest()
         {
             _mocks = new MoqAutoMocker<TfsApiBridge>();
-            _mocks.MockObjectFactory();
         }
 
         [Fact]

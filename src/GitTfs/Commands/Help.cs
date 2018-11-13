@@ -102,7 +102,7 @@ namespace GitTfs.Commands
         private string GetCommandName(GitTfsCommand command)
         {
             return (from instance in GetCommandInstances()
-                    where instance.ConcreteType == command.GetType()
+                    where instance.ReturnedType == command.GetType()
                     select instance.Name).Single();
         }
 

@@ -5,10 +5,11 @@ using System.Linq;
 using NDesk.Options;
 using GitTfs.Core;
 using GitTfs.Util;
+using StructureMap;
 
 namespace GitTfs
 {
-    [StructureMapSingleton]
+    [Singleton]
     public class Globals
     {
         public OptionSet OptionSet

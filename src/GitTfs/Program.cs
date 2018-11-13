@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using GitTfs.Commands;
 using GitTfs.Core;
 using GitTfs.Core.Changes.Git;
 using GitTfs.Core.TfsInterop;
@@ -89,10 +90,16 @@ namespace GitTfs
         {
             ConfigureLogger();
             var tfsPlugin = TfsPlugin.Find();
-            initializer.Scan(x => { Initialize(x); tfsPlugin.Initialize(x); });
+            initializer.Scan(scan =>
+            {
+                scan.TheCallingAssembly();
+                scan.WithDefaultConventions();
+                scan.AddAllTypesOf<GitTfsCommand>();
+                scan.Exclude(t => t == typeof(QuickFetch));
+                tfsPlugin.Initialize(scan);
+            });
             initializer.For<IGitRepository>().Add<GitRepository>();
             AddGitChangeTypes(initializer);
-            DoCustomConfiguration(initializer);
             tfsPlugin.Initialize(initializer);
         }
 
@@ -142,31 +149,14 @@ namespace GitTfs
         public static void AddGitChangeTypes(ConfigurationExpression initializer)
         {
             // See git-diff-tree(1).
+            //initializer.For<IGitChangedFile>().Use<TypeChange>().Named(GitChangeInfo.ChangeType.TYPECHANGE);
             initializer.For<IGitChangedFile>().Use<Add>().Named(GitChangeInfo.ChangeType.ADD);
             initializer.For<IGitChangedFile>().Use<Copy>().Named(GitChangeInfo.ChangeType.COPY);
             initializer.For<IGitChangedFile>().Use<Modify>().Named(GitChangeInfo.ChangeType.MODIFY);
-            //initializer.For<IGitChangedFile>().Use<TypeChange>().Named(GitChangeInfo.GitChange.TYPECHANGE);
             initializer.For<IGitChangedFile>().Use<Delete>().Named(GitChangeInfo.ChangeType.DELETE);
             initializer.For<IGitChangedFile>().Use<RenameEdit>().Named(GitChangeInfo.ChangeType.RENAMEEDIT);
-            //initializer.For<IGitChangedFile>().Use<Unmerged>().Named(GitChangeInfo.GitChange.UNMERGED);
-            //initializer.For<IGitChangedFile>().Use<Unknown>().Named(GitChangeInfo.GitChange.UNKNOWN);
-        }
-
-        private static void Initialize(IAssemblyScanner scan)
-        {
-            scan.WithDefaultConventions();
-            scan.TheCallingAssembly();
-        }
-
-        private static void DoCustomConfiguration(ConfigurationExpression initializer)
-        {
-            foreach (var type in typeof(Program).Assembly.GetTypes())
-            {
-                foreach (ConfiguresStructureMap attribute in type.GetCustomAttributes(typeof(ConfiguresStructureMap), false))
-                {
-                    attribute.Initialize(initializer, type);
-                }
-            }
+            //initializer.For<IGitChangedFile>().Use<Unmerged>().Named(GitChangeInfo.ChangeType.UNMERGED);
+            //initializer.For<IGitChangedFile>().Use<Unknown>().Named(GitChangeInfo.ChangeType.UNKNOWN);
         }
     }
 }

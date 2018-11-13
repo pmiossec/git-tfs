@@ -1361,12 +1361,12 @@ namespace GitTfs.VsCommon
 
         protected string TryGetUserRegString(string path, string name)
         {
-            return TryGetRegString(Registry.CurrentUser, path, name);
+            return TryGetRegString(Microsoft.Win32.Registry.CurrentUser, path, name);
         }
 
         protected string TryGetRegString(string path, string name)
         {
-            return TryGetRegString(Registry.LocalMachine, path, name);
+            return TryGetRegString(Microsoft.Win32.Registry.LocalMachine, path, name);
         }
 
         protected string TryGetRegString(RegistryKey registryKey, string path, string name)
@@ -1402,7 +1402,7 @@ namespace GitTfs.VsCommon
         /// <returns>the value corresponding to the key found</returns>
         protected string TryGetUserRegStringStartingWithName(string path, string startOfName)
         {
-            return TryGetRegStringStartingWithName(Registry.CurrentUser, path, startOfName);
+            return TryGetRegStringStartingWithName(Microsoft.Win32.Registry.CurrentUser, path, startOfName);
         }
 
         /// <summary>
@@ -1418,7 +1418,7 @@ namespace GitTfs.VsCommon
         /// <returns>the value corresponding to the key found</returns>
         protected string TryGetRegStringStartingWithName(string path, string startOfName)
         {
-            return TryGetRegStringStartingWithName(Registry.LocalMachine, path, startOfName);
+            return TryGetRegStringStartingWithName(Microsoft.Win32.Registry.LocalMachine, path, startOfName);
         }
 
         protected string TryGetRegStringStartingWithName(RegistryKey registryKey, string path, string startOfName)

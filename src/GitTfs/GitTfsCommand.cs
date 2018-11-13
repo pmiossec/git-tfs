@@ -1,9 +1,8 @@
 using NDesk.Options;
-using StructureMap;
 
 namespace GitTfs
 {
-    [PluginFamily]
+    //[PluginFamily]
     public interface GitTfsCommand
     {
         OptionSet OptionSet { get; }

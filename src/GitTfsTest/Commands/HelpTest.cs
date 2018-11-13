@@ -5,8 +5,10 @@ using NDesk.Options;
 using Xunit;
 using NLog;
 using System.Diagnostics;
+using GitTfs.Util;
 using NLog.Config;
 using NLog.Targets;
+using StructureMap.AutoMocking.Moq;
 
 namespace GitTfs.Test.Commands
 {
@@ -38,9 +40,7 @@ namespace GitTfs.Test.Commands
         public void ShouldWriteGeneralHelp()
         {
             var memoryTarget = GetTestLogger();
-
-            mocks.Container.PluginGraph.FindFamily(typeof(GitTfsCommand)).AddType(typeof(TestCommand), "test");
-            mocks.Container.Inject<GitTfsCommand>("test", new TestCommand());
+            mocks.Container.Inject(typeof(GitTfsCommand), new TestCommand());
             mocks.ClassUnderTest.Run();
 
             memoryTarget.Logs[0].Equals("Usage: git-tfs [command] [options]");
@@ -53,14 +53,13 @@ namespace GitTfs.Test.Commands
         public void ShouldWriteCommandHelp()
         {
             var memoryTarget = GetTestLogger();
-            mocks.Container.PluginGraph.CreateFamily(typeof(GitTfsCommand));
-            mocks.Container.PluginGraph.FindFamily(typeof(GitTfsCommand)).AddType(typeof(TestCommand), "test");
-            mocks.Container.Inject<GitTfsCommand>("test", new TestCommand());
+            mocks.Container.Inject(typeof(GitTfsCommand), new TestCommand());
             mocks.ClassUnderTest.Run(new[] { "test" });
 
             memoryTarget.Logs[0].Equals("Usage: git-tfs test [options]");
         }
 
+        [Pluggable("test")]
         public class TestCommand : GitTfsCommand
         {
             public bool Flag { get; set; }

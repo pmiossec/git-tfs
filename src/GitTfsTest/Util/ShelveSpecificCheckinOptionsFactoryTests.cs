@@ -2,6 +2,7 @@
 using GitTfs.Core;
 using GitTfs.Util;
 using StructureMap.AutoMocking;
+using StructureMap.AutoMocking.Moq;
 using Xunit;
 
 namespace GitTfs.Test.Util

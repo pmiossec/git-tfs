@@ -1,9 +1,10 @@
 ﻿using NDesk.Options;
 using GitTfs.Util;
+using StructureMap;
 
 namespace GitTfs.Commands
 {
-    [StructureMapSingleton]
+    [Singleton]
     public class CleanupOptions
     {
         private readonly Globals _globals;

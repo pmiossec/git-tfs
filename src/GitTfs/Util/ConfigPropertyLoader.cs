@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using StructureMap;
 
 namespace GitTfs.Util
 {
     // Manages configurable values.
-    [StructureMapSingleton]
+    [Singleton]
     public class ConfigPropertyLoader
     {
         private readonly Globals _globals;

@@ -4,6 +4,7 @@ using GitTfs.Util;
 using Moq;
 using StructureMap.AutoMocking;
 using NDesk.Options;
+using StructureMap.AutoMocking.Moq;
 using Xunit;
 
 namespace GitTfs.Test.Util

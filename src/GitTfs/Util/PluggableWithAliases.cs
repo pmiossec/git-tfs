@@ -1,4 +1,5 @@
 ﻿using StructureMap;
+using StructureMap.Pipeline;
 
 namespace GitTfs.Util
 {
@@ -10,6 +11,21 @@ namespace GitTfs.Util
             : base(concreteKey)
         {
             Aliases = aliases;
+        }
+    }
+
+    public class PluggableAttribute : StructureMapAttribute
+    {
+        public string ConcreteKey { get; set; }
+
+        public PluggableAttribute(string concreteKey)
+        {
+            ConcreteKey = concreteKey;
+        }
+
+        public override void Alter(IConfiguredInstance instance)
+        {
+            instance.Name = ConcreteKey;
         }
     }
 }

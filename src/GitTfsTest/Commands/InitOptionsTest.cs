@@ -1,6 +1,6 @@
 ﻿using GitTfs.Commands;
-using StructureMap.AutoMocking;
 using NDesk.Options;
+using StructureMap.AutoMocking.Moq;
 using Xunit;
 
 namespace GitTfs.Test.Commands

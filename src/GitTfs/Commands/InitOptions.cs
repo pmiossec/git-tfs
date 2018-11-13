@@ -1,10 +1,11 @@
 using System;
 using NDesk.Options;
 using GitTfs.Util;
+using StructureMap;
 
 namespace GitTfs.Commands
 {
-    [StructureMapSingleton]
+    [Singleton]
     public class InitOptions
     {
         private const string DefaultAutocrlf = "false";

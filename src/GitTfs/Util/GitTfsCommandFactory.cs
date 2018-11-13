@@ -4,7 +4,7 @@ using StructureMap;
 
 namespace GitTfs.Util
 {
-    [StructureMapSingleton]
+    [Singleton]
     public class GitTfsCommandFactory
     {
         private readonly IContainer _container;
@@ -27,7 +27,7 @@ namespace GitTfs.Util
 
             foreach (var instance in commandPluginType.Instances)
             {
-                var attribte = instance.ConcreteType.GetCustomAttributes(typeof(PluggableWithAliases), true)
+                var attribte = instance.ReturnedType.GetCustomAttributes(typeof(PluggableWithAliases), true)
                     .Cast<PluggableWithAliases>().FirstOrDefault();
 
                 if (attribte != null)

@@ -7,6 +7,7 @@ using GitTfs.Core.TfsInterop;
 using StructureMap;
 using System.ComponentModel;
 using System.Diagnostics;
+using GitTfs.Util;
 
 namespace GitTfs.Commands
 {

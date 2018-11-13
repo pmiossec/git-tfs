@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using GitTfs.Core;
 using System.Diagnostics;
+using StructureMap;
 
 namespace GitTfs.Util
 {
@@ -62,7 +63,7 @@ namespace GitTfs.Util
         #endregion
     }
 
-    [StructureMapSingleton]
+    [Singleton]
     public class AuthorsFile
     {
         private readonly Dictionary<string, Author> _authorsByTfsUserId = new Dictionary<string, Author>(StringComparer.OrdinalIgnoreCase);

@@ -5,7 +5,7 @@ using GitTfs.Core;
 using GitTfs.Core.TfsInterop;
 using GitTfs.VsFake;
 using Moq;
-using StructureMap.AutoMocking;
+using StructureMap.AutoMocking.Moq;
 using Xunit;
 
 namespace GitTfs.Test.Commands
@@ -19,7 +19,6 @@ namespace GitTfs.Test.Commands
         {
             mocks = new MoqAutoMocker<InitBranch>();
             var globals = mocks.Get<Globals>();
-            var globalsMock = Mock.Get(globals).SetupAllProperties();
             globals.Repository = mocks.Get<IGitRepository>();
         }
 

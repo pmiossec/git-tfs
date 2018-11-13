@@ -5,6 +5,7 @@ using System.IO;
 using NDesk.Options;
 using StructureMap;
 using GitTfs.Core;
+using GitTfs.Util;
 
 namespace GitTfs.Commands
 {

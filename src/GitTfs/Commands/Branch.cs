@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using NDesk.Options;
 using GitTfs.Core;
 using GitTfs.Core.TfsInterop;
+using GitTfs.Util;
 using StructureMap;
 
 namespace GitTfs.Commands

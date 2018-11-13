@@ -2,6 +2,7 @@
 using GitTfs.Core;
 using Moq;
 using StructureMap.AutoMocking;
+using StructureMap.AutoMocking.Moq;
 using Xunit;
 
 namespace GitTfs.Test.Commands
@@ -11,7 +12,6 @@ namespace GitTfs.Test.Commands
         private readonly MoqAutoMocker<Shelve> mocks;
         private readonly Mock<IGitRepository> gitRepositoryMock;
         private readonly Mock<IGitTfsRemote> gitTfsRemoteMock;
-        private readonly Mock<Globals> globalsMock;
 
         public ShelveTest()
         {
@@ -21,7 +21,6 @@ namespace GitTfs.Test.Commands
             gitRepositoryMock = Mock.Get(gitRepository);
 
             var globals = mocks.Get<Globals>();
-            globalsMock = Mock.Get(globals).SetupAllProperties();
             globals.Repository = gitRepository;
 
             var gitTfsRemote = mocks.Get<IGitTfsRemote>();
@@ -63,7 +62,6 @@ namespace GitTfs.Test.Commands
         public void ShouldSucceedWithMoreThanOneParentsWhenCorrectParentSpecified()
         {
             var globals = mocks.Get<Globals>();
-            Mock.Get(globals).SetupAllProperties();
             globals.Repository = mocks.Get<IGitRepository>();
             globals.UserSpecifiedRemoteId = "good-choice";
             gitRepositoryMock.Setup(x => x.GetLastParentTfsCommits("my-head"))
@@ -75,7 +73,7 @@ namespace GitTfs.Test.Commands
         [Fact]
         public void ShouldSucceedWithParentsFromSubtreeAndOwner()
         {
-            globalsMock.Object.UserSpecifiedRemoteId = "good-choice";
+            mocks.Get<Globals>().UserSpecifiedRemoteId = "good-choice";
 
             var subtree = ChangesetForRemote("good-choice_subtree/good");
             gitTfsRemoteMock.Setup(x => x.IsSubtree).Returns(true);

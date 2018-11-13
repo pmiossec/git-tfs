@@ -1,6 +1,7 @@
 ﻿using NDesk.Options;
 using StructureMap;
 using System.Diagnostics;
+using GitTfs.Util;
 
 namespace GitTfs.Commands
 {

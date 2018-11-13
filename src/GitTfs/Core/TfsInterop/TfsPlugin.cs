@@ -105,7 +105,7 @@ namespace GitTfs.Core.TfsInterop
 
             private static bool TryGetRegString(string path)
             {
-                RegistryKey registryKey = Registry.LocalMachine;
+                RegistryKey registryKey = Microsoft.Win32.Registry.LocalMachine;
                 try
                 {
                     Trace.WriteLine("Trying to get " + registryKey.Name + "\\" + path);
