@@ -16,9 +16,9 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GitTfs.Common\GitTfs.Common.csproj" />
     <ProjectReference Include="..\NDesk.Options\NDesk.Options.csproj" />
     <ProjectReference Include="..\GitTfs.VsFake\GitTfs.VsFake.csproj" />
-    <ProjectReference Include="..\GitTfs\GitTfs.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="xunit.runner.visualstudio.testadapter, Version=2.1.0.1129, Culture=neutral, processorArchitecture=MSIL">

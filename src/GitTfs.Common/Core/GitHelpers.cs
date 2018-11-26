@@ -90,10 +90,10 @@ namespace GitTfs.Core
                 _helper.Close(_process);
             }
 
-            public override System.Runtime.Remoting.ObjRef CreateObjRef(Type requestedType)
-            {
-                return _process.StandardOutput.CreateObjRef(requestedType);
-            }
+            //public override System.Runtime.Remoting.ObjRef CreateObjRef(Type requestedType)
+            //{
+            //    return _process.StandardOutput.CreateObjRef(requestedType);
+            //}
 
             protected override void Dispose(bool disposing)
             {

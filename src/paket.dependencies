@@ -1,4 +1,4 @@
-framework: net462
+framework: net462,netstandard2.0
 source https://www.nuget.org/api/v2/
 
 //If you plan to update this file, you must first absolutly read our documentation on the subject

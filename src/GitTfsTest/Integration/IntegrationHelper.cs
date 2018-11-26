@@ -273,7 +273,7 @@ namespace GitTfs.Test.Integration
                     argsWithDebug.Add("--debug");
                 }
                 argsWithDebug.AddRange(args);
-                return Program.MainCore(argsWithDebug.ToArray());
+                return ProgramHelper.MainCore(argsWithDebug.ToArray());
             }
             finally
             {

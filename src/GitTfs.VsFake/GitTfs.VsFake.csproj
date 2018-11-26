@@ -12,7 +12,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GitTfs\GitTfs.csproj" />
+    <ProjectReference Include="..\GitTfs.Common\GitTfs.Common.csproj" />
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy /y /I &quot;$(TargetPath)&quot; &quot;$(SolutionDir)GitTfs\$(OutDir)*&quot;" />

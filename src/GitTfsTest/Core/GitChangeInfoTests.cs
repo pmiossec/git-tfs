@@ -60,7 +60,7 @@ namespace GitTfs.Test.Core
         private IGitChangedFile GetChangeItem(string diffTreeLine)
         {
             // This method is similar to BuildGitChangedFile in GitRepository.
-            var container = new Container(x => { Program.AddGitChangeTypes(x); });
+            var container = new Container(ProgramHelper.AddGitChangeTypes);
             return GitChangeInfo.Parse(diffTreeLine).ToGitChangedFile(container.With((IGitRepository)null));
         }
 

@@ -31,11 +31,11 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GitTfs\GitTfs.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
     <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GitTfs.Common\GitTfs.Common.csproj" />
   </ItemGroup>
       <ItemGroup>
     <Reference Include="System.Windows.Forms" />

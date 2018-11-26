@@ -26,11 +26,9 @@
     </None>
     <None Include="App.config" />
     <None Include="app.manifest" />
-    <None Include="Core\TfsInterop\README.txt" />
-    <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NDesk.Options\NDesk.Options.csproj" />
+    <ProjectReference Include="..\GitTfs.Common\GitTfs.Common.csproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
