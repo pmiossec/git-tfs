@@ -1,7 +1,9 @@
 LibGit2Sharp
-xunit
-xunit.runner.visualstudio
-Moq
 nlog
 structuremap
+
+group tests
+Moq
 StructureMap.AutoMocking.Moq.Updated
+xunit
+xunit.runner.visualstudio

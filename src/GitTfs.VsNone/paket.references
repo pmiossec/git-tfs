@@ -1,0 +1,6 @@
+structuremap
+
+group dotnetcore
+
+Microsoft.TeamFoundationServer.Client
+Microsoft.TeamFoundationServer.ExtendedClient

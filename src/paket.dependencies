@@ -1,5 +1,5 @@
-framework: net462,netstandard2.0,netcoreapp2.0
-source https://www.nuget.org/api/v2/
+framework: net462,netstandard2.0
+source https://api.nuget.org/v3/index.json
 
 //If you plan to update this file, you must first absolutly read our documentation on the subject
 //because there is some subtleties on how we use it in our project:
@@ -7,20 +7,35 @@ source https://www.nuget.org/api/v2/
 
 nuget nlog
 nuget LibGit2Sharp ~> 0.25.0
-nuget Microsoft.TeamFoundationServer.Client ~> 14.0
-nuget Microsoft.TeamFoundationServer.ExtendedClient ~> 14.0
-nuget Moq
 nuget WixSharp 1.0.22.3 framework: >= net40
 nuget structuremap
+
+
+group tests
+    framework: netcoreapp2.0
+    source https://api.nuget.org/v3/index.json
+nuget Moq
 nuget StructureMap.AutoMocking.moq.Updated
 nuget xunit
 nuget xunit.assert
 nuget xunit.runner.visualstudio version_in_path: true
 
+group netfwk
+    framework: net462
+    source https://api.nuget.org/v3/index.json
+nuget Microsoft.TeamFoundationServer.Client ~> 14.0
+nuget Microsoft.TeamFoundationServer.ExtendedClient ~> 14.0
+
+group dotnetcore
+    framework: netcoreapp2.0
+    source https://api.nuget.org/v3/index.json
+nuget Microsoft.TeamFoundationServer.Client ~> 16.170.0
+nuget Microsoft.TeamFoundationServer.ExtendedClient ~> 16.170.0
+
 group Build
     framework: 4.5
     redirects: off
-    source https://nuget.org/api/v2
+    source https://api.nuget.org/v3/index.json
 
 nuget Cake
 nuget Cake.Git

@@ -24,11 +24,12 @@ namespace GitTfs.Core.TfsInterop
                 return pluginLoader.TryLoadVsPluginVersion(explicitVersion) ??
                        pluginLoader.Fail("Unable to load TFS version specified in GIT_TFS_CLIENT (" + explicitVersion + ")!");
             }
-            return pluginLoader.TryLoadVsPluginVersion("2015", true) ??
+            return pluginLoader.TryLoadVsPluginVersion("201x", true) ??
                    pluginLoader.TryLoadVsPluginVersion("2013") ??
                    pluginLoader.TryLoadVsPluginVersion("2012") ??
                    pluginLoader.TryLoadVsPluginVersion("2010") ??
-                   pluginLoader.TryLoadVsPluginVersion("2015") ??
+                   pluginLoader.TryLoadVsPluginVersion("201x") ??
+                   pluginLoader.TryLoadVsPluginVersion("None") ??
                    pluginLoader.Fail();
         }
 

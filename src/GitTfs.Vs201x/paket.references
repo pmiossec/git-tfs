@@ -1,0 +1,5 @@
+structuremap
+
+group netfwk
+Microsoft.TeamFoundationServer.Client
+Microsoft.TeamFoundationServer.ExtendedClient
