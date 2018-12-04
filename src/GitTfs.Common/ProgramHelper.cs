@@ -127,7 +127,7 @@ namespace GitTfs
             }
             catch (Exception ex)
             {
-                //TODO: Fix that
+                //TODO[netcore migration]: Fix that
                 //Trace.Listeners.Add(new ConsoleTraceListener());
                 Trace.TraceWarning("Fail to enable logging in file due to error:" + ex.Message);
             }

@@ -90,6 +90,7 @@ namespace GitTfs.Core
                 _helper.Close(_process);
             }
 
+            //TODO[netcore migration]: Fix that
             //public override System.Runtime.Remoting.ObjRef CreateObjRef(Type requestedType)
             //{
             //    return _process.StandardOutput.CreateObjRef(requestedType);
