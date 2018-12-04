@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>GitTfs.Test</RootNamespace>
@@ -19,12 +19,6 @@
     <ProjectReference Include="..\GitTfs.Common\GitTfs.Common.csproj" />
     <ProjectReference Include="..\NDesk.Options\NDesk.Options.csproj" />
     <ProjectReference Include="..\GitTfs.VsFake\GitTfs.VsFake.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="xunit.runner.visualstudio.testadapter, Version=2.1.0.1129, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\xunit.runner.visualstudio\build\_common\xunit.runner.visualstudio.testadapter.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
