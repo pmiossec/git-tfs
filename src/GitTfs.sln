@@ -55,6 +55,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GitTfs.Vs201x", "GitTfs.Vs2
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GitTfs.VsNone", "GitTfs.VsNone\GitTfs.VsNone.csproj", "{13EE7E84-2FB7-4427-B777-637E43D14863}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitTfsMultiPlatform", "GitTfsMultiPlatform\GitTfsMultiPlatform.csproj", "{C7AACBBE-4213-4935-9D82-BDBE6805E6B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -101,6 +103,10 @@ Global
 		{13EE7E84-2FB7-4427-B777-637E43D14863}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{13EE7E84-2FB7-4427-B777-637E43D14863}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{13EE7E84-2FB7-4427-B777-637E43D14863}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{C7AACBBE-4213-4935-9D82-BDBE6805E6B9}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{C7AACBBE-4213-4935-9D82-BDBE6805E6B9}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{C7AACBBE-4213-4935-9D82-BDBE6805E6B9}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{C7AACBBE-4213-4935-9D82-BDBE6805E6B9}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
