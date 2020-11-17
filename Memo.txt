@@ -1,0 +1,27 @@
++		Properties	Count = 0	System.Collections.ObjectModel.ReadOnlyCollection<Microsoft.TeamFoundation.Framework.Client.PropertyValue>
+
+		ChangeType	Add | Edit | Encoding	Microsoft.TeamFoundation.VersionControl.Client.Change
+		ChangeType	Add | Edit | Encoding	Microsoft.TeamFoundation.VersionControl.Client.ChangeType
+
+File		ItemType	File	Microsoft.TeamFoundation.VersionControl.Client.ItemType
+
+
+
+-		_item	{Item instance 54852443
+  ChangesetId: 4
+  CheckinDate: 21/09/2020 15:31:35
+  ContentLength: 15
+  DeletionId: 0
+  DownloadUrl: 
+  Encoding: -1
+  HashValue: [16]189, 127, 184, 244, 101, 92, 112, 73, 213, 117, 4, 177, 116, 80, 234, 31
+  InternalAttributes: [0]
+  InternalPropertyValues: [0]
+  IsBranch: False
+  ItemId: 3
+  ItemType: File
+  ServerItem: $/GitToTfsTest/link.sh
+  TimeZone: 
+  TimeZoneOffset: 
+}	Microsoft.TeamFoundation.VersionControl.Client.Item
+

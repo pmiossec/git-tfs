@@ -11,6 +11,8 @@ namespace GitTfs.Core.TfsInterop
         TfsItemType ItemType { get; }
         int ItemId { get; }
         long ContentLength { get; }
+        bool IsExecutable { get; }
+        bool IsSymlink { get; }
         TemporaryFile DownloadFile();
     }
 

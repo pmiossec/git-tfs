@@ -2,5 +2,3 @@ LibGit2Sharp.dll
 NDesk.Options.dll
 StructureMap.dll
 NLog.dll
-System.Net.Http.Formatting.dll
-System.Web.Http.dll

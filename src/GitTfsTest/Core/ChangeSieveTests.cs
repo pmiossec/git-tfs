@@ -181,6 +181,8 @@ namespace GitTfs.Test.Core
             int IItem.ItemId => _itemId;
 
             long IItem.ContentLength => throw new NotImplementedException();
+            public bool IsExecutable => false;
+            public bool IsSymlink => false;
 
             TemporaryFile IItem.DownloadFile()
             {
@@ -216,6 +218,10 @@ namespace GitTfs.Test.Core
                 int IItem.ItemId => throw new NotImplementedException();
 
                 long IItem.ContentLength => throw new NotImplementedException();
+
+                public bool IsExecutable => false;
+
+                public bool IsSymlink => false;
 
                 TemporaryFile IItem.DownloadFile()
                 {
@@ -663,6 +669,8 @@ namespace GitTfs.Test.Core
                 int IItem.ItemId => 200;
 
                 long IItem.ContentLength => 0;
+                public bool IsExecutable => false;
+                public bool IsSymlink => false;
 
                 TemporaryFile IItem.DownloadFile()
                 {

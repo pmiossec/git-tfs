@@ -207,6 +207,9 @@ namespace GitTfs.VsFake
                 }
             }
 
+            public bool IsExecutable => false;
+            public bool IsSymlink => false;
+
             TemporaryFile IItem.DownloadFile()
             {
                 var temp = new TemporaryFile();

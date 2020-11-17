@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.TeamFoundation.Framework.Client;
 
 namespace GitTfs.VsCommon
 {
@@ -126,15 +127,9 @@ namespace GitTfs.VsCommon
             _change = change;
         }
 
-        public TfsChangeType ChangeType
-        {
-            get { return _bridge.Convert<TfsChangeType>(_change.ChangeType); }
-        }
+        public TfsChangeType ChangeType => _bridge.Convert<TfsChangeType>(_change.ChangeType);
 
-        public IItem Item
-        {
-            get { return _bridge.Wrap<WrapperForItem, Item>(_change.Item); }
-        }
+        public IItem Item => _bridge.Wrap<WrapperForItem, Item>(_change.Item);
     }
 
     public class WrapperForItem : WrapperFor<Item>, IItem
@@ -150,40 +145,59 @@ namespace GitTfs.VsCommon
             _item = item;
         }
 
-        public IVersionControlServer VersionControlServer
+        public IVersionControlServer VersionControlServer => _bridge.Wrap<WrapperForVersionControlServer, VersionControlServer>(_item.VersionControlServer);
+
+        public int ChangesetId => _item.ChangesetId;
+
+        public string ServerItem => _item.ServerItem;
+
+        public int DeletionId => _item.DeletionId;
+
+        public TfsItemType ItemType => _bridge.Convert<TfsItemType>(_item.ItemType);
+
+        public int ItemId => _item.ItemId;
+
+        public long ContentLength => _item.ContentLength;
+
+        // https://github.com/git-tfs/git-tfs/issues/242#issuecomment-576821737
+        // https://github.com/microsoft/team-explorer-everywhere/blob/13d5d0af05fc210f3390509b31c912123c92c47b/source/com.microsoft.tfs.core/src/com/microsoft/tfs/core/clients/versioncontrol/PropertyConstants.java#L14-L19
+        private const string EXECUTABLE_KEY = "Microsoft.TeamFoundation.VersionControl.Executable";
+        private const string SYMBOLIC_KEY = "Microsoft.TeamFoundation.VersionControl.SymbolicLink";
+
+        public bool IsExecutable
         {
-            get { return _bridge.Wrap<WrapperForVersionControlServer, VersionControlServer>(_item.VersionControlServer); }
+            get
+            {
+                foreach (PropertyValue value in _item.PropertyValues)
+                {
+                    if (value.PropertyName == EXECUTABLE_KEY && value.Value?.ToString() == "true")
+                    {
+                        return true;
+                    }
+                }
+
+
+                return false;
+            }
         }
 
-        public int ChangesetId
+        public bool IsSymlink
         {
-            get { return _item.ChangesetId; }
+            get
+            {
+                foreach (PropertyValue value in _item.PropertyValues)
+                {
+                    if (value.PropertyName == SYMBOLIC_KEY && value.Value?.ToString() == "true")
+                    {
+                        return true;
+                    }
+                }
+
+
+                return false;
+            }
         }
 
-        public string ServerItem
-        {
-            get { return _item.ServerItem; }
-        }
-
-        public int DeletionId
-        {
-            get { return _item.DeletionId; }
-        }
-
-        public TfsItemType ItemType
-        {
-            get { return _bridge.Convert<TfsItemType>(_item.ItemType); }
-        }
-
-        public int ItemId
-        {
-            get { return _item.ItemId; }
-        }
-
-        public long ContentLength
-        {
-            get { return _item.ContentLength; }
-        }
 
         public TemporaryFile DownloadFile()
         {

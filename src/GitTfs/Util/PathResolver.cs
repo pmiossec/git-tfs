@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using GitTfs.Core;
+using Mode = LibGit2Sharp.Mode;
 
 namespace GitTfs.Util
 {
@@ -20,17 +21,17 @@ namespace GitTfs.Util
 
         public string GetPathInGitRepo(string tfsPath)
         {
-            return GetGitObject(tfsPath).Try(x => x.Path);
+            return GetGitObject(tfsPath, Mode.NonExecutableFile).Try(x => x.Path);
         }
 
-        public GitObject GetGitObject(string tfsPath)
+        public GitObject GetGitObject(string tfsPath, Mode mode)
         {
             var pathInGitRepo = _remote.GetPathInGitRepo(tfsPath);
             if (pathInGitRepo == null)
                 return null;
             if (!string.IsNullOrEmpty(_relativePath))
                 pathInGitRepo = _relativePath + "/" + pathInGitRepo;
-            return Lookup(pathInGitRepo);
+            return Lookup(pathInGitRepo, mode);
         }
 
         public bool IsIgnored(string path)
@@ -56,7 +57,7 @@ namespace GitTfs.Util
 
         private static readonly Regex SplitDirnameFilename = new Regex(@"(?<dir>.*)[/\\](?<file>[^/\\]+)", RegexOptions.Compiled);
 
-        private GitObject Lookup(string pathInGitRepo)
+        private GitObject Lookup(string pathInGitRepo, Mode mode)
         {
             GitObject result;
             if (_initialTree.TryGetValue(pathInGitRepo, out result))
@@ -68,9 +69,9 @@ namespace GitTfs.Util
             {
                 var dirName = splitResult.Groups["dir"].Value;
                 var fileName = splitResult.Groups["file"].Value;
-                fullPath = Lookup(dirName).Path + "/" + fileName;
+                fullPath = Lookup(dirName, mode).Path + "/" + fileName;
             }
-            result = new GitObject { Path = fullPath };
+            result = new GitObject { Path = fullPath, Mode = mode};
             _initialTree[fullPath] = result;
             return result;
         }

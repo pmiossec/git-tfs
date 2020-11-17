@@ -9,6 +9,7 @@ nuget nlog
 nuget LibGit2Sharp ~> 0.26.1
 nuget Microsoft.TeamFoundationServer.Client ~> 16.153.0
 nuget Microsoft.TeamFoundationServer.ExtendedClient ~> 16.153.0
+nuget Microsoft.VisualStudio.Services.Client ~> 16.153.0
 nuget Moq
 nuget structuremap 2.6.3
 nuget StructureMap.AutoMocking 2.6.3

@@ -47,7 +47,7 @@ namespace GitTfs.Util
 
             _namedChanges = changeset.Changes.Select(c => new NamedChange
             {
-                Info = _resolver.GetGitObject(c.Item.ServerItem),
+                Info = _resolver.GetGitObject(c.Item.ServerItem, c.Item.IsExecutable ? Mode.ExecutableFile : (c.Item.IsSymlink ? Mode.SymbolicLink : Mode.NonExecutableFile)),
                 Change = c,
             });
         }
@@ -111,7 +111,7 @@ namespace GitTfs.Util
 
                     if (change.Change.ChangeType.IncludesOneOf(TfsChangeType.Rename))
                     {
-                        var oldInfo = _resolver.GetGitObject(GetPathBeforeRename(change.Change.Item));
+                        var oldInfo = _resolver.GetGitObject(GetPathBeforeRename(change.Change.Item), Mode.NonExecutableFile);
                         if (oldInfo != null)
                         {
                             compartments.Deleted.Add(ApplicableChange.Delete(oldInfo.Path));

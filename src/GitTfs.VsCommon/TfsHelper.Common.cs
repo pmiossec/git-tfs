@@ -20,6 +20,10 @@ using StructureMap.Attributes;
 using ChangeType = Microsoft.TeamFoundation.VersionControl.Client.ChangeType;
 using IdentityNotFoundException = Microsoft.TeamFoundation.VersionControl.Client.IdentityNotFoundException;
 using Microsoft.TeamFoundation.Build.Client;
+using Microsoft.TeamFoundation.Framework.Client;
+using Microsoft.TeamFoundation.SourceControl.WebApi;
+using Microsoft.VisualStudio.Services.WebApi;
+using CheckinNote = Microsoft.TeamFoundation.VersionControl.Client.CheckinNote;
 
 namespace GitTfs.VsCommon
 {
@@ -86,7 +90,36 @@ namespace GitTfs.VsCommon
 
                 _server = GetTfsCredential(uri);
 
+                _server.Credentials = GetCredential();
+
                 _server.EnsureAuthenticated();
+
+
+                Microsoft.VisualStudio.Services.Common.WindowsCredential winCred = new Microsoft.VisualStudio.Services.Common.WindowsCredential(_server.Credentials);
+
+                VssConnection _connection = new VssConnection(uri, winCred);
+
+                TfvcHttpClient tfvcClient = _connection.GetClient<TfvcHttpClient>();
+
+                var changesets = new[] { 4 /* Symlink added */, 6 /* Executable bit */ };
+                //var changesets = tfvcClient.GetChangesetsAsync().Result;
+
+                //tfvcItems[0].
+
+                foreach (var changeset in changesets)
+                {
+                    var changesetId = changeset;
+                    var changesetRes = tfvcClient.GetChangesetChangesAsync(changesetId).Result;
+
+                    foreach (var change in changesetRes)
+                    {
+                        TfvcItem item = change.Item;
+                        Trace.WriteLine($"{item.Path} => Symlink: {item.IsSymbolicLink}");
+                        var tfvcItems = tfvcClient.GetItemsAsync(item.Path, VersionControlRecursionType.None, true,
+                            new TfvcVersionDescriptor(TfvcVersionOption.None, TfvcVersionType.Changeset, $"{changesetId}")).Result;
+                        Trace.WriteLine($"__________ => Symlink: {tfvcItems.First().IsSymbolicLink}");
+                    }
+                }
             }
         }
 
@@ -1119,6 +1152,43 @@ namespace GitTfs.VsCommon
                     // all of them.
                     // With this exception at least it would be evident asap that something went wrong, so we could fix it.
                     return _contentLength;
+                }
+            }
+
+            private const string EXECUTABLE_KEY = "Microsoft.TeamFoundation.VersionControl.Executable";
+            private const string SYMBOLIC_KEY = "Microsoft.TeamFoundation.VersionControl.SymbolicLink";
+
+            public bool IsExecutable
+            {
+                get
+                {
+                    foreach (PropertyValue value in _pendingChange.PropertyValues)
+                    {
+                        if (value.PropertyName == EXECUTABLE_KEY && value.Value?.ToString() == "true")
+                        {
+                            return true;
+                        }
+                    }
+
+
+                    return false;
+                }
+            }
+
+            public bool IsSymlink
+            {
+                get
+                {
+                    foreach (PropertyValue value in _pendingChange.PropertyValues)
+                    {
+                        if (value.PropertyName == SYMBOLIC_KEY && value.Value?.ToString() == "true")
+                        {
+                            return true;
+                        }
+                    }
+
+
+                    return false;
                 }
             }
 

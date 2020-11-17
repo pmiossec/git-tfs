@@ -1,3 +1,4 @@
 Microsoft.TeamFoundationServer.Client
 Microsoft.TeamFoundationServer.ExtendedClient
+Microsoft.VisualStudio.Services.Client
 structuremap
