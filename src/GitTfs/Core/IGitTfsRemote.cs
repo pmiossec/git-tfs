@@ -42,7 +42,7 @@ namespace GitTfs.Core
         /// <summary>
         /// Part of the solution for Path Too Long
         /// </summary>
-        IReadOnlyList<Tuple<string, string>> FolderMappings { get; }
+        IReadOnlyList<WorkingFolderMapping> FolderMappings { get; }
         string IgnoreRegexExpression { get; }
         string IgnoreExceptRegexExpression { get; }
         bool Autotag { get; }

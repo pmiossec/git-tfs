@@ -578,7 +578,7 @@ namespace GitTfs.VsCommon
             Workspace workspace;
             if (!_workspaces.TryGetValue(remote.Id, out workspace))
             {
-                Trace.WriteLine("Setting up a TFS workspace with subtrees at " + localDirectory);
+                Trace.WriteLine("Setting up a TFVC workspace with subtrees at " + localDirectory);
                 mappings = mappings.ToList(); // avoid iterating through the mappings more than once, and don't retry when this iteration raises an error.
                 _workspaces.Add(remote.Id, workspace = Retry.Do(() =>
                 {
@@ -598,20 +598,20 @@ namespace GitTfs.VsCommon
 
         public void WithWorkspace(string localDirectory, IGitTfsRemote remote, TfsChangesetInfo versionToFetch, Action<ITfsWorkspace> action)
         {
-            Trace.WriteLine("Setting up a TFS workspace at:");
+            Trace.WriteLine("Setting up a TFVC workspace at:");
 
             IList<WorkingFolder> workingFolders = new List<WorkingFolder>();
 
-            Trace.WriteLine($"  - TFS path [{remote.TfsRepositoryPath}] maps to '{localDirectory}'");
+            Trace.WriteLine($"  - TFVC path '{remote.TfsRepositoryPath}' maps to '{localDirectory}'");
 
             workingFolders.Add(new WorkingFolder(remote.TfsRepositoryPath, localDirectory));
 
             if (remote.FolderMappings != null)
             {
-                foreach (var t in remote.FolderMappings)
+                foreach (var mapping in remote.FolderMappings)
                 {
-                    Trace.WriteLine($"  - TFS path '{t.Item1}' maps to '{t.Item2}'");
-                    workingFolders.Add(new WorkingFolder(t.Item1, t.Item2));
+                    Trace.WriteLine($"  - TFVC path '{mapping.SourceControlFolder}' maps to '{mapping.LocalFolder}'");
+                    workingFolders.Add(new WorkingFolder(mapping.SourceControlFolder, mapping.LocalFolder));
                 }
             }
 
@@ -636,7 +636,7 @@ namespace GitTfs.VsCommon
         private Workspace GetWorkspace(params WorkingFolder[] folders)
         {
             var workspace = VersionControl.CreateWorkspace(GenerateWorkspaceName());
-            Trace.TraceInformation("Workspace name '{0}'", workspace.Name);
+            Trace.TraceInformation($"Workspace name '{workspace.Name}'");
             try
             {
                 SetWorkspaceMappingFolders(workspace, folders);

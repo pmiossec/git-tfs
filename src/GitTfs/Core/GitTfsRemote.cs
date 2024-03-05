@@ -47,18 +47,15 @@ namespace GitTfs.Core
 
             if (!string.IsNullOrWhiteSpace(remoteOptions.MultipleWorkingFoldersConfigFilePath))
             {
-                if (System.IO.File.Exists((remoteOptions.MultipleWorkingFoldersConfigFilePath)))
-                {
-                    Trace.TraceInformation("MultipleWorkingFoldersConfigFilePath path: [{0}]", remoteOptions.MultipleWorkingFoldersConfigFilePath);
-
-                    IList<WorkingFolderMapping> mappings = Newtonsoft.Json.JsonConvert.DeserializeObject<IList<WorkingFolderMapping>>(System.IO.File.ReadAllText(remoteOptions.MultipleWorkingFoldersConfigFilePath));
-
-                    FolderMappings = (IReadOnlyList<Tuple<string, string>>)mappings.Select(c => new Tuple<string, string>(c.SourceControlFolder, c.LocalFolder));
-                }
-                else
+                if (!File.Exists(remoteOptions.MultipleWorkingFoldersConfigFilePath))
                 {
                     throw new FileNotFoundException("The file specified with the --MultipleWorkingFoldersConfigFilePath was not found");
                 }
+
+                Trace.TraceInformation($"MultipleWorkingFoldersConfigFilePath path found: {remoteOptions.MultipleWorkingFoldersConfigFilePath}");
+
+                var content = File.ReadAllText(remoteOptions.MultipleWorkingFoldersConfigFilePath);
+                FolderMappings = Newtonsoft.Json.JsonConvert.DeserializeObject<IList<WorkingFolderMapping>>(content).ToArray();
             }
 
             Autotag = info.Autotag;
@@ -166,7 +163,7 @@ namespace GitTfs.Core
         }
         private string[] tfsSubtreePaths = null;
 
-        public IReadOnlyList<Tuple<string, string>> FolderMappings { get; }
+        public IReadOnlyList<WorkingFolderMapping> FolderMappings { get; }
 
         public string IgnoreRegexExpression { get; }
         public string IgnoreExceptRegexExpression { get; }
