@@ -1,0 +1,1 @@
+Add the Multi Workspace workaround to the PathTooLong issue ( #1478 by @patricecalvehoc )
