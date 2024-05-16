@@ -25,6 +25,7 @@ And remember:
 To get a stable version:
 
 * Download a binary. Find it on the [release page](https://github.com/git-tfs/git-tfs/releases),
+* Using Winget. If [Winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/ is available on your computer, run `winget install git-tfs.git-tfs` to install the last version.
 * Using Chocolatey. If [Chocolatey](http://chocolatey.org/) is already installed on your computer, run `choco install gittfs` to install the [Chocolatey package](http://chocolatey.org/packages/gittfs)
 
 To get a development version
