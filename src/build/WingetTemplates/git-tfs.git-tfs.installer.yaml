@@ -17,7 +17,7 @@ Installers:
   NestedInstallerType: portable
   NestedInstallerFiles:
   - RelativeFilePath: git-tfs.exe
-    PortableCommandAlias: git-tfs
+#    PortableCommandAlias: git-tfs
   UpgradeBehavior: uninstallPrevious
   Commands:
   - git-tfs
