@@ -5,6 +5,7 @@ using GitTfs.Core.TfsInterop;
 using StructureMap;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 
 namespace GitTfs.Commands
 {
@@ -30,6 +31,8 @@ namespace GitTfs.Commands
                 {
                     { "ignore-path-case-mismatch", "Ignore the case mismatch in the path when comparing the files.",
                         v => IgnorePathCaseMismatch = v != null },
+                    { "ignore-eol", "Ignore the end of line differences in files compared (Due to character encoding required, result is not guaranted depending on file encoding).",
+                        v => IgnoreEoL = v != null },
                     { "all", "Verify all the tfs remotes",
                         v => VerifyAllRemotes = v != null },
                 }.Merge(_remoteOptions.OptionSet);
@@ -37,6 +40,7 @@ namespace GitTfs.Commands
         public bool VerifyAllRemotes { get; set; }
 
         public bool IgnorePathCaseMismatch { get; set; }
+        public bool IgnoreEoL { get; set; }
 
         public int Run()
         {
@@ -71,7 +75,7 @@ namespace GitTfs.Commands
             int foundDiff = GitTfsExitCodes.OK;
             foreach (var parent in parents)
             {
-                foundDiff = Math.Max(foundDiff, _verifier.Verify(parent, IgnorePathCaseMismatch));
+                foundDiff = Math.Max(foundDiff, _verifier.Verify(parent, IgnorePathCaseMismatch, IgnoreEoL));
             }
             return foundDiff;
         }
@@ -88,7 +92,7 @@ namespace GitTfs.Commands
             _hashProvider = new SHA1CryptoServiceProvider();
         }
 
-        public int Verify(TfsChangesetInfo changeset, bool ignorePathCaseMismatch)
+        public int Verify(TfsChangesetInfo changeset, bool ignorePathCaseMismatch, bool ignoreEoL)
         {
             Trace.TraceInformation("Comparing TFS changeset " + changeset.ChangesetId + " to git commit " + changeset.GitCommit);
             var tfsTree = changeset.Remote.GetChangeset(changeset.ChangesetId).GetTree().ToDictionary(entry => entry.FullName.ToLowerInvariant());
@@ -106,7 +110,7 @@ namespace GitTfs.Commands
                 {
                     if (gitTree.ContainsKey(file))
                     {
-                        if (Compare(tfsTree[file], gitTree[file], ignorePathCaseMismatch))
+                        if (IsDifferent(tfsTree[file], gitTree[file], ignorePathCaseMismatch, ignoreEoL))
                             foundDiff = Math.Max(foundDiff, GitTfsExitCodes.VerifyContentMismatch);
                     }
                     else
@@ -126,31 +130,62 @@ namespace GitTfs.Commands
             return foundDiff;
         }
 
-        private bool Compare(TfsTreeEntry tfsTreeEntry, GitTreeEntry gitTreeEntry, bool ignorePathCaseMismatch)
+        private bool IsDifferent(TfsTreeEntry tfsTreeEntry, GitTreeEntry gitTreeEntry, bool ignorePathCaseMismatch, bool ignoreEoL)
         {
-            var different = false;
+            var isDifferent = false;
             if (!ignorePathCaseMismatch && tfsTreeEntry.FullName != gitTreeEntry.FullName)
             {
                 Trace.TraceInformation("Name case mismatch:");
                 Trace.TraceInformation("  TFS: " + tfsTreeEntry.FullName);
                 Trace.TraceInformation("  git: " + gitTreeEntry.FullName);
-                different = true;
+                isDifferent = true;
             }
 
             string repoContentHash = Hash(gitTreeEntry);
             string tfvcContentHash = Hash(tfsTreeEntry);
-            if (tfvcContentHash != repoContentHash)
+            if (tfvcContentHash == repoContentHash)
             {
-                Trace.TraceInformation($"{gitTreeEntry.FullName} differs (Git Repo: {repoContentHash} / TFVC: {tfvcContentHash}).");
-                different = true;
+                return isDifferent;
             }
-            return different;
+
+            if (ignoreEoL)
+            {
+                string repoContentHashIgnoreEoL = HashWithLfEol(gitTreeEntry);
+                string tfvcContentHashIgnoreEoL = HashWithLfEol(tfsTreeEntry);
+                if(repoContentHashIgnoreEoL == tfvcContentHashIgnoreEoL)
+                {
+                    Trace.TraceInformation($"{gitTreeEntry.FullName} differs only by end of line characters...");
+                    return isDifferent;
+                }
+                else
+                {
+                    Trace.TraceWarning($"{gitTreeEntry.FullName} differs (Git Repo: {repoContentHash} / TFVC: {tfvcContentHash}).");
+                    return true;
+                }
+            }
+            else
+            {
+                Trace.TraceWarning($"{gitTreeEntry.FullName} differs (Git Repo: {repoContentHash} / TFVC: {tfvcContentHash}).");
+                return true;
+            }
         }
 
         private string Hash(ITreeEntry treeEntry)
         {
             using (var stream = treeEntry.OpenRead())
-                return BitConverter.ToString(_hashProvider.ComputeHash(stream));
+                return BitConverter.ToString(_hashProvider.ComputeHash(stream)).ToLower().Replace("-", string.Empty);
+        }
+
+        private string HashWithLfEol(ITreeEntry treeEntry)
+        {
+            using (var stream = treeEntry.OpenRead())
+            using (StreamReader reader = new StreamReader(stream, System.Text.Encoding.ASCII))
+            {
+                string content = reader.ReadToEnd();
+                string contentWithLfEol = content.Replace("\r\n", "\n");
+
+                return BitConverter.ToString(_hashProvider.ComputeHash(System.Text.Encoding.ASCII.GetBytes(contentWithLfEol))).ToLower().Replace("-", string.Empty);
+            }
         }
     }
 }
