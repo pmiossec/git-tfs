@@ -80,10 +80,12 @@ namespace GitTfs.Commands
     public class TreeVerifier
     {
         private readonly ITfsHelper _tfs;
+        private readonly SHA1CryptoServiceProvider _hashProvider;
 
         public TreeVerifier(ITfsHelper tfs)
         {
             _tfs = tfs;
+            _hashProvider = new SHA1CryptoServiceProvider();
         }
 
         public int Verify(TfsChangesetInfo changeset, bool ignorePathCaseMismatch)
@@ -134,9 +136,12 @@ namespace GitTfs.Commands
                 Trace.TraceInformation("  git: " + gitTreeEntry.FullName);
                 different = true;
             }
-            if (Hash(tfsTreeEntry) != Hash(gitTreeEntry))
+
+            string repoContentHash = Hash(gitTreeEntry);
+            string tfvcContentHash = Hash(tfsTreeEntry);
+            if (tfvcContentHash != repoContentHash)
             {
-                Trace.TraceInformation(gitTreeEntry.FullName + " differs.");
+                Trace.TraceInformation($"{gitTreeEntry.FullName} differs (Git Repo: {repoContentHash} / TFVC: {tfvcContentHash}).");
                 different = true;
             }
             return different;
@@ -145,7 +150,7 @@ namespace GitTfs.Commands
         private string Hash(ITreeEntry treeEntry)
         {
             using (var stream = treeEntry.OpenRead())
-                return BitConverter.ToString(new MD5CryptoServiceProvider().ComputeHash(stream));
+                return BitConverter.ToString(_hashProvider.ComputeHash(stream));
         }
     }
 }
